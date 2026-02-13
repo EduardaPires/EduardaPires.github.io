@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>malware.lab</title>
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0b0b0b;
+  color: #d9d9d9;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.6;
+}
+
+/* HEADER */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 60px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.logo {
+  color: #2bff88;
+  font-weight: 600;
+  letter-spacing: 1px;
+  font-size: 18px;
+}
+
+nav a {
+  color: #9a9a9a;
+  text-decoration: none;
+  margin-left: 25px;
+  font-size: 14px;
+}
+
+nav a:hover {
+  color: #00e1ff;
+}
+
+/* HERO */
+
+.hero {
+  text-align: center;
+  padding: 90px 20px 60px;
+}
+
+.hero h1 {
+  font-size: 28px;
+  color: #2bff88;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  color: #777;
+  font-size: 14px;
+}
+
+/* POSTS */
+
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+  padding: 40px 60px 80px;
+}
+
+.card {
+  border: 1px solid #1a1a1a;
+  padding: 20px;
+  background: #101010;
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  border-color: #2bff88;
+  transform: translateY(-2px);
+}
+
+.card h2 {
+  font-size: 16px;
+  margin: 10px 0;
+  color: #e6e6e6;
+}
+
+.card p {
+  font-size: 13px;
+  color: #8a8a8a;
+}
+
+.tag {
+  font-size: 11px;
+  color: #00e1ff;
+}
+
+/* FOOTER */
+
+footer {
+  text-align: center;
+  padding: 30px;
+  border-top: 1px solid #1a1a1a;
+  color: #555;
+  font-size: 12px;
+}
+
+/* RESPONSIVO */
+
+@media (max-width: 700px) {
+  header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 25px 20px;
+  }
+
+  .posts {
+    padding: 30px 20px 60px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">malware.lab</div>
+  <nav>
+    <a href="#">home</a>
+    <a href="#">analises</a>
+    <a href="#">ferramentas</a>
+    <a href="#">sobre</a>
+  </nav>
+</header>
+
+<main>
+
+<section class="hero">
+  <h1>malware analysis blog</h1>
+  <p>reverse engineering • forensics • threat research</p>
+</section>
+
+<section class="posts">
+
+  <div class="card">
+    <span class="tag">trojan</span>
+    <h2>loader x32 investigation</h2>
+    <p>análise de comportamento, strings e comunicação de rede.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">worm</span>
+    <h2>sample 9f3a dissection</h2>
+    <p>persistência, mutex e técnicas de evasão.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">tooling</span>
+    <h2>static analysis workflow</h2>
+    <p>ferramentas e metodologia para iniciantes.</p>
+  </div>
+
+</section>
+
+</main>
+
+<footer>
+  <p>© 2026 malware.lab</p>
+</footer>
+
+</body>
+</html>
