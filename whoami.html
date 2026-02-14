@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>malware.lab - whoami</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#000;
+  color:#33ff66;
+  font-family:'JetBrains Mono',monospace;
+  display:flex;
+  justify-content:center;
+}
+
+.wrapper{
+  width:96%;
+  max-width:1500px;
+  margin:30px auto;
+  background:#050505;
+  border:1px solid #0f3;
+  box-shadow:0 0 20px rgba(0,255,0,.2),inset 0 0 40px rgba(0,255,0,.08);
+  
+}
+
+.topbar{
+ 
+  color:#9f9f9f;
+  padding:6px 15px;
+  font-size:14px;
+  display:flex;
+  gap:20px;
+  border-bottom:1px solid #0f3;
+
+}
+
+header{
+  padding:25px 40px;
+  border-bottom:1px solid #0f3;
+  display:flex;
+  align-items:center;
+}
+
+.pagetitle{
+  font-size:20px;
+  color:#66ff99;
+  text-shadow:0 0 8px #0f3;
+  font-weight:600;
+  margin:0px 0px 20px 0px;
+}
+
+.logo{
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+
+.logo-main{
+  font-size:26px;
+  color:#66ff99;
+  text-shadow:0 0 8px #0f3;
+  font-weight:600;
+}
+
+.logo-sub{
+  font-size:12px;
+  color:#55aa66;
+  margin-top:3px;
+}
+
+.nav-right{
+  margin-left:auto;
+  display:flex;
+  gap:20px;
+  font-size:13px;
+}
+
+.nav-right a{
+  color:#33ff66;
+  text-decoration:none;
+}
+
+.content{
+  padding:40px;
+}
+
+pre{
+  border:1px solid #0f3;
+  padding:20px;
+  background:#022202;
+  margin-top:20px;
+  white-space:pre-wrap;
+  line-height:1.5;
+  text-align:justify-center;
+margin:50px 150px 20px 80px;
+}
+
+.footerbar{
+  border-top:1px solid #0f3;
+  padding:8px 0;
+  font-size:13px;
+  overflow:hidden;
+  position:relative;
+  height:28px;
+  display:flex;
+  align-items:center;
+  width:100%;
+  white-space:nowrap;
+  background:#022202;
+}
+
+.terminal-scroll{
+  position:absolute;
+  color:#66ff99;
+  text-shadow:0 0 6px #0f3;
+  animation:scrollText 9s linear infinite;
+}
+
+@keyframes scrollText{
+  from { transform:translateX(275%); }
+  to   { transform:translateX(-100%); }
+}
+
+
+.cursor::after{
+  content:"";
+  display:inline-block;
+  width:10px;
+  height:18px;
+  background:#0f3;
+  margin-left:6px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  50%{opacity:0;}
+}
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+
+<div class="topbar"><span>File</span><span>Edit</span><span>Search</span></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-main">
+      0xED04RD4's blog <span class="cursor"></span>
+    </div>
+    <div class="logo-sub">
+      análise de malware, reversing, e outras baixarias de low level
+    </div>
+  </div>
+
+  <div class="nav-right">
+<a href="index.html">home</a>
+    <a href="whoami.html">whoami</a>
+    <a href="blogs.html">posts</a>
+  </div>
+</header>
+
+<!-- CONTEÚDO -->
+<div class="content">
+
+      <div class="pagetitle">
+      $ whoami 
+
+    </div>
+<h3>ED04RD4 / Analista de cibersegurança</h3>
+
+<pre>
+O objetivo desse blog é funcionar como um inventário de publicações relacionadas a todos os assuntos que eu estiver estudando. Com ele, pretendo contribuir para tornar conhecimentos de baixo nível e reversing mais acessíveis, por meio da explicação de conceitos importantes, resoluções de desafios e desenvolvimento de casos de uso. 
+Caso você <user> deseje compartilhar qualquer dúvida, pensamento, feedback ou correção, sintá-se mais do que bem-vindo(a) para entrar em contato comigo (de preferência linkedin, porque quase não uso as outras).
+
+## Redes sociais:
+> Linkedin
+> Instagram 
+> X
+
+</pre>
+
+</div>
+
+<div class="footerbar">
+  <div class="terminal-scroll">
+    [+] terminal aberto com SUCESSO (0xED04RD4's blog v1.0)... Seja bem-vindo(a) <user>!
+  </div>
+</div>
+
+
+</div>
+</body>
+</html>

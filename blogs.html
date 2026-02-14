@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>malware.lab - blogs</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#000;
+  color:#33ff66;
+  font-family:'JetBrains Mono',monospace;
+  display:flex;
+  justify-content:center;
+}
+
+.wrapper{
+  width:96%;
+  max-width:1500px;
+  margin:30px auto;
+  background:#050505;
+  border:1px solid #0f3;
+  box-shadow:0 0 20px rgba(0,255,0,.2),inset 0 0 40px rgba(0,255,0,.08);
+ 
+}
+
+.topbar{
+
+  color:#9f9f9f;
+  padding:6px 15px;
+  font-size:14px;
+  display:flex;
+  gap:20px;
+  border-bottom:1px solid #0f3;
+  
+}
+
+header{
+  padding:25px 40px;
+  border-bottom:1px solid #0f3;
+  display:flex;
+  align-items:center;
+}
+
+.logo{
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+
+.logo-main{
+  font-size:26px;
+  color:#66ff99;
+  text-shadow:0 0 8px #0f3;
+  font-weight:600;
+}
+
+.logo-sub{
+  font-size:12px;
+  color:#55aa66;
+  margin-top:3px;
+}
+
+.cursor::after{
+  content:"";
+  display:inline-block;
+  width:10px;
+  height:18px;
+  background:#0f3;
+  margin-left:6px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  50%{opacity:0}
+}
+
+
+
+.nav-right{
+  margin-left:auto;
+  display:flex;
+  gap:20px;
+  font-size:13px;
+}
+
+.pagetitle{
+  font-size:20px;
+  color:#66ff99;
+  text-shadow:0 0 8px #0f3;
+  font-weight:600;
+  margin:0px 0px 20px 0px;
+}
+
+.nav-right a{
+  color:#33ff66;
+  text-decoration:none;
+}
+
+.blog-layout{
+  display:flex;
+  min-height:600px;
+}
+
+.sidebar{
+  width:260px;
+  padding:25px;
+  border-right:1px solid #0f3;
+  background:#020202;
+  display:flex;
+  flex-direction:column;
+  gap:25px;
+}
+
+.sidebar h2{
+  font-size:15px;
+  color:#66ff99;
+}
+
+.search-box input{
+  width:100%;
+  background:#000;
+  border:1px solid #0f3;
+  color:#33ff66;
+  padding:10px;
+  border-radius:6px;
+  outline:none;
+}
+
+.filters{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.filter-item{
+  display:flex;
+  gap:10px;
+  font-size:13px;
+}
+
+.filter-item input{
+  accent-color:#33ff66;
+  transform:scale(1.2);
+}
+
+.content{
+  flex:1;
+  padding:40px;
+}
+
+.posts{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px;
+}
+
+.post{
+  border:1px solid #0f3;
+  padding:20px;
+  background:#020202;
+  border-radius:8px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.post:hover{
+  box-shadow:0 0 12px #0f3;
+  transform:translateY(-3px);
+}
+
+.tag{
+  font-size:11px;
+  color:#0f3;
+}
+
+.footerbar{
+  border-top:1px solid #0f3;
+  padding:8px 0;
+  font-size:13px;
+  overflow:hidden;
+  position:relative;
+  height:28px;
+  display:flex;
+  align-items:center;
+  width:100%;
+  white-space:nowrap;
+  background:#022202;
+}
+
+.terminal-scroll{
+  position:absolute;
+  color:#66ff99;
+  text-shadow:0 0 6px #0f3;
+  animation:scrollText 9s linear infinite;
+}
+
+@keyframes scrollText{
+  from { transform:translateX(275%); }
+  to   { transform:translateX(-100%); }
+}
+
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+
+<div class="topbar"><span>File</span><span>Edit</span><span>Search</span></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-main">
+      0xED04RD4's blog <span class="cursor"></span>
+    </div>
+    <div class="logo-sub">
+      análise de malware, reversing, e outras baixarias de low level
+    </div>
+  </div>
+
+  <div class="nav-right">
+<a href="index.html">home</a>
+    <a href="whoami.html">whoami</a>
+    <a href="blogs.html">posts</a>
+  </div>
+</header>
+
+
+<!-- CONTEÚDO QUE MUDA -->
+<div class="blog-layout">
+
+<aside class="sidebar">
+  <h2>Busca</h2>
+  <div class="search-box">
+    <input id="search" placeholder="buscar por titulo...">
+  </div>
+
+  <h2>Filtros</h2>
+  <div class="filters">
+    <label class="filter-item"><input type="checkbox" value="tutorial" checked> tutorial</label>
+    <label class="filter-item"><input type="checkbox" value="analise"> analise de malware</label>
+    <label class="filter-item"><input type="checkbox" value="crackme"> crackme</label>
+    <label class="filter-item"><input type="checkbox" value="baixo"> baixo nivel</label>
+  </div>
+</aside>
+
+<main class="content">
+      <div class="pagetitle">
+      $ ls /posts
+    </div>
+  <div id="posts" class="posts"></div>
+</main>
+
+</div>
+<div class="footerbar">
+  <div class="terminal-scroll">
+    [+] terminal aberto com SUCESSO (0xED04RD4's blog v1.0)... Seja bem-vindo(a) <user>!
+  </div>
+</div>
+
+
+</div>
+
+<script src="js/filter.js"></script>
+</body>
+</html>
