@@ -1,180 +1,157 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <title>malware.lab</title>
-
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
-
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#33ff66;font-family:'JetBrains Mono',monospace;display:flex;justify-content:center}
+.wrapper{width:96%;max-width:1500px;margin:30px auto;background:#050505;border:1px solid #0f3;box-shadow:0 0 20px rgba(0,255,0,.2),inset 0 0 40px rgba(0,255,0,.08)}
+.topbar{color:#9f9f9f;padding:6px 15px;font-size:14px;display:flex;gap:20px;border-bottom:1px solid #0f3}
+header{padding:25px 40px;border-bottom:1px solid #0f3;display:flex;align-items:center}
+.logo{
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+ 
 }
 
-body {
-  background: #0b0b0b;
-  color: #d9d9d9;
-  font-family: 'JetBrains Mono', monospace;
-  line-height: 1.6;
+.pagetitle{
+  font-size:20px;
+  color:#66ff99;
+  text-shadow:0 0 8px #0f3;
+  font-weight:600;
+  margin:20px 0px 10px 0px;
 }
 
-/* HEADER */
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 25px 60px;
-  border-bottom: 1px solid #1a1a1a;
+.logo-main{
+  font-size:26px;
+  color:#66ff99;
+  text-shadow:0 0 8px #0f3;
+  font-weight:600;
 }
 
-.logo {
-  color: #2bff88;
-  font-weight: 600;
-  letter-spacing: 1px;
-  font-size: 18px;
+.logo-sub{
+  font-size:12px;
+  color:#55aa66;
+  margin-top:3px;
 }
 
-nav a {
-  color: #9a9a9a;
-  text-decoration: none;
-  margin-left: 25px;
-  font-size: 14px;
+.cursor::after{
+  content:"";
+  display:inline-block;
+  width:10px;
+  height:18px;
+  background:#0f3;
+  margin-left:6px;
+  animation:blink 1s infinite;
 }
 
-nav a:hover {
-  color: #00e1ff;
+@keyframes blink{
+  50%{opacity:0}
 }
 
-/* HERO */
 
-.hero {
-  text-align: center;
-  padding: 90px 20px 60px;
+.nav-right{margin-left:auto;display:flex;gap:20px;font-size:13px}
+.nav-right a{color:#33ff66;text-decoration:none}
+.hero{padding:40px}
+.about{padding:0 40px 20px 40px;color:#55aa66;font-size:14px;max-width:900px}
+.posts{padding:30px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:25px}
+.card{border:1px solid #0f3;padding:18px;background:#020202;cursor:pointer}
+.tag{font-size:11px;color:#0f3}
+.tablewrap{padding:40px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #0f3;padding:10px;font-size:13px}
+th{background:#0f3;color:#000}
+tr:nth-child(even){background:#001a00}
+.codebox{border:1px solid #0f3;padding:15px;margin-top:20px;background:#000;color:#0f3;white-space:pre-wrap}
+.footerbar{
+  background:#022202;
+  border-top:1px solid #0f3;
+  padding:8px 0;
+  font-size:13px;
+  overflow:hidden;
+  position:relative;
+  height:28px;
+  display:flex;
+  align-items:center;
+  width:100%;
+  white-space:nowrap;
 }
 
-.hero h1 {
-  font-size: 28px;
-  color: #2bff88;
-  margin-bottom: 10px;
+.terminal-scroll{
+  position:absolute;
+  color:#66ff99;
+  text-shadow:0 0 6px #0f3;
+  animation:scrollText 9s linear infinite;
 }
 
-.hero p {
-  color: #777;
-  font-size: 14px;
+@keyframes scrollText{
+  from { transform:translateX(275%); }
+  to   { transform:translateX(-100%); }
 }
 
-/* POSTS */
 
-.posts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 25px;
-  padding: 40px 60px 80px;
-}
 
-.card {
-  border: 1px solid #1a1a1a;
-  padding: 20px;
-  background: #101010;
-  transition: 0.2s ease;
-}
-
-.card:hover {
-  border-color: #2bff88;
-  transform: translateY(-2px);
-}
-
-.card h2 {
-  font-size: 16px;
-  margin: 10px 0;
-  color: #e6e6e6;
-}
-
-.card p {
-  font-size: 13px;
-  color: #8a8a8a;
-}
-
-.tag {
-  font-size: 11px;
-  color: #00e1ff;
-}
-
-/* FOOTER */
-
-footer {
-  text-align: center;
-  padding: 30px;
-  border-top: 1px solid #1a1a1a;
-  color: #555;
-  font-size: 12px;
-}
-
-/* RESPONSIVO */
-
-@media (max-width: 700px) {
-  header {
-    flex-direction: column;
-    gap: 15px;
-    padding: 25px 20px;
-  }
-
-  .posts {
-    padding: 30px 20px 60px;
-  }
-}
+.cursor::after{content:"";display:inline-block;width:10px;height:18px;background:#0f3;margin-left:5px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0}}
 </style>
 </head>
-
 <body>
+<div class="wrapper">
+
+<div class="topbar"><span>File</span><span>Edit</span><span>Search</span></div>
 
 <header>
-  <div class="logo">malware.lab</div>
-  <nav>
-    <a href="#">home</a>
-    <a href="#">analises</a>
-    <a href="#">ferramentas</a>
-    <a href="#">sobre</a>
-  </nav>
+  <div class="logo">
+    <div class="logo-main">
+      0xED04RD4's blog <span class="cursor"></span>
+    </div>
+    <div class="logo-sub">
+      malware analysis • reversing • low level 
+    </div>
+  </div>
+
+  <div class="nav-right">
+<a href="index.html">home</a>
+    <a href="whoami.html">whoami</a>
+    <a href="blogs.html">posts</a>
+  </div>
 </header>
 
-<main>
 
-<section class="hero">
-  <h1>malware analysis blog</h1>
-  <p>reverse engineering • forensics • threat research</p>
-</section>
+
+<div class="about">
+    <div class="pagetitle">
+      $ --help 
+    </div>
+Este é um blog pessoal focado em compartilhar estudos relacionados a análise de malware, engenharia reversa e baixo nível no geral.
+</div>
 
 <section class="posts">
-
-  <div class="card">
-    <span class="tag">trojan</span>
-    <h2>loader x32 investigation</h2>
-    <p>análise de comportamento, strings e comunicação de rede.</p>
-  </div>
-
-  <div class="card">
-    <span class="tag">worm</span>
-    <h2>sample 9f3a dissection</h2>
-    <p>persistência, mutex e técnicas de evasão.</p>
-  </div>
-
-  <div class="card">
-    <span class="tag">tooling</span>
-    <h2>static analysis workflow</h2>
-    <p>ferramentas e metodologia para iniciantes.</p>
-  </div>
-
+<div class="card" onclick="location.href='pages/post1.html'"><span class="tag">analise de malware</span><h2>loader x32 investigation</h2></div>
+<div class="card" onclick="location.href='pages/post2.html'"><span class="tag">crackme</span><h2>sample 9f3a dissection</h2></div>
+<div class="card" onclick="location.href='pages/post3.html'"><span class="tag">tutorial</span><h2>static analysis workflow</h2></div>
 </section>
 
-</main>
+<div class="tablewrap">
+<h3>samples já analisados</h3>
+<table>
+<tr><th>Hash</th><th>Type</th><th>Status</th></tr>
+<tr onclick="location.href=''"><td></td><td></td><td></td></tr>
+<tr onclick="location.href=''"><td></td><td></td><td></td></tr>
+</table>
 
-<footer>
-  <p>© 2026 malware.lab</p>
-</footer>
+
+</div>
+
+<div class="footerbar">
+  <div class="terminal-scroll">
+    [+] terminal aberto com SUCESSO (0xED04RD4's blog v1.0)... Seja bem-vindo(a) <user>!
+  </div>
+</div>
 
 </body>
 </html>
