@@ -3,106 +3,13 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>malware.lab</title>
+<title>0xED04RD4's blog</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#33ff66;font-family:'JetBrains Mono',monospace;display:flex;justify-content:center}
-.wrapper{width:96%;max-width:1500px;margin:30px auto;background:#050505;border:1px solid #0f3;box-shadow:0 0 20px rgba(0,255,0,.2),inset 0 0 40px rgba(0,255,0,.08)}
-.topbar{color:#9f9f9f;padding:6px 15px;font-size:14px;display:flex;gap:20px;border-bottom:1px solid #0f3}
-header{padding:25px 40px;border-bottom:1px solid #0f3;display:flex;align-items:center}
-.logo{
-  display:flex;
-  flex-direction:column;
-  line-height:1.1;
- 
-}
-
-.pagetitle{
-  font-size:20px;
-  color:#66ff99;
-  text-shadow:0 0 8px #0f3;
-  font-weight:600;
-  margin:20px 0px 10px 0px;
-}
-
-.logo-main{
-  font-size:26px;
-  color:#66ff99;
-  text-shadow:0 0 8px #0f3;
-  font-weight:600;
-}
-
-.logo-sub{
-  font-size:12px;
-  color:#55aa66;
-  margin-top:3px;
-}
-
-.cursor::after{
-  content:"";
-  display:inline-block;
-  width:10px;
-  height:18px;
-  background:#0f3;
-  margin-left:6px;
-  animation:blink 1s infinite;
-}
-
-@keyframes blink{
-  50%{opacity:0}
-}
-
-
-.nav-right{margin-left:auto;display:flex;gap:20px;font-size:13px}
-.nav-right a{color:#33ff66;text-decoration:none}
-.hero{padding:40px}
-.about{padding:0 40px 20px 40px;color:#55aa66;font-size:14px;max-width:900px}
-.posts{padding:30px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:25px}
-.card{border:1px solid #0f3;padding:18px;background:#020202;cursor:pointer}
-.tag{font-size:11px;color:#0f3}
-.tablewrap{padding:40px}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #0f3;padding:10px;font-size:13px}
-th{background:#0f3;color:#000}
-tr:nth-child(even){background:#001a00}
-.codebox{border:1px solid #0f3;padding:15px;margin-top:20px;background:#000;color:#0f3;white-space:pre-wrap}
-.footerbar{
-  background:#022202;
-  border-top:1px solid #0f3;
-  padding:8px 0;
-  font-size:13px;
-  overflow:hidden;
-  position:relative;
-  height:28px;
-  display:flex;
-  align-items:center;
-  width:100%;
-  white-space:nowrap;
-}
-
-.terminal-scroll{
-  position:absolute;
-  color:#66ff99;
-  text-shadow:0 0 6px #0f3;
-  animation:scrollText 9s linear infinite;
-}
-
-@keyframes scrollText{
-  from { transform:translateX(275%); }
-  to   { transform:translateX(-100%); }
-}
-
-
-
-.cursor::after{content:"";display:inline-block;width:10px;height:18px;background:#0f3;margin-left:5px;animation:blink 1s infinite}
-@keyframes blink{50%{opacity:0}}
-</style>
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/index.css">
 </head>
 <body>
 <div class="wrapper">
-
-<div class="topbar"><span>File</span><span>Edit</span><span>Search</span></div>
 
 <header>
   <div class="logo">
@@ -121,23 +28,21 @@ tr:nth-child(even){background:#001a00}
   </div>
 </header>
 
+<br>
 
-
-<div class="about">
     <div class="pagetitle">
-      $ --help 
-    </div>
-Este é um blog pessoal focado em compartilhar estudos relacionados a análise de malware, engenharia reversa e baixo nível no geral.
+      $ ls /posts_recentes 
 </div>
-
 <section class="posts">
-<div class="card" onclick="location.href='pages/post1.html'"><span class="tag">analise de malware</span><h2>loader x32 investigation</h2></div>
-<div class="card" onclick="location.href='pages/post2.html'"><span class="tag">crackme</span><h2>sample 9f3a dissection</h2></div>
-<div class="card" onclick="location.href='pages/post3.html'"><span class="tag">tutorial</span><h2>static analysis workflow</h2></div>
+<div class="card" onclick="location.href='pages/post5.html'"><span class="tag">vulnerabilidades</span><h2 style="font-family: 'JetBrains Mono', monospace;">buffer overflow baseado em Stack</h2></div>
+<div class="card" onclick="location.href=''"><span class="tag"> </span><h2 style="font-family: 'JetBrains Mono', monospace;">em breve...</h2></div>
+<div class="card" onclick="location.href=''"><span class="tag"> </span><h2 style="font-family: 'JetBrains Mono', monospace;">em breve...</h2></div>
 </section>
 
+    <div class="pagetitle">
+      $ samples_analisados
+    </div>
 <div class="tablewrap">
-<h3>samples já analisados</h3>
 <table>
 <tr><th>Hash</th><th>Type</th><th>Status</th></tr>
 <tr onclick="location.href=''"><td></td><td></td><td></td></tr>
@@ -147,11 +52,7 @@ Este é um blog pessoal focado em compartilhar estudos relacionados a análise d
 
 </div>
 
-<div class="footerbar">
-  <div class="terminal-scroll">
-    [+] terminal aberto com SUCESSO (0xED04RD4's blog v1.0)... Seja bem-vindo(a) <user>!
-  </div>
-</div>
+
 
 </body>
 </html>

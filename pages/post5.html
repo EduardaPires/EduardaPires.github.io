@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Aprendendo buffer overflow baseado em Stack - 0xED04RD4's blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/post.css">
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="logo">
+        <div class="logo-main">0xED04RD4's blog <span class="cursor"></span></div>
+        <div class="logo-sub">malware analysis • reversing • low level</div>
+      </div>
+      <div class="nav-right">
+        <a href="../index.html">home</a>
+        <a href="../whoami.html">whoami</a>
+        <a href="../blogs.html">posts</a>
+      </div>
+    </header>
+
+    <main class="post-content-area">
+      <div class="post-header">
+        <h1 class="post-title">Aprendendo a fazer um ataque de buffer overflow baseado em Stack</h1>
+        <time class="post-date" datetime="2024-08-23">23 de agosto de 2024</time>
+      </div>
+
+      <div class="post-body">
+        <p>
+          Este artigo foi feito para que eu possa mostrar um pouco dos meus estudos de vulnerabilidades, principalmente voltadas para baixo nível que são as que mais me interessam. Como é o primeiro que estou escrevendo, decidi começar com uma bastante conhecida e simples de se entender.
+        </p>
+        <p>
+          Sendo assim, farei aqui uma breve introdução não só ao buffer overflow em si, mas a outros conceitos fundamentais sobre registradores e memória.
+        </p>
+        <p>
+          <strong>Obs:</strong> Para algumas demonstrações usarei a ferramenta Immunity Debugger, que aceita apenas arquivos de 32 bits. Portanto, os registradores e conceitos gerais serão abordados tratando de um ambiente nessa arquitetura.
+        </p>
+        <p>
+          <strong>Obs 2:</strong> Deixando claro que não sou nenhuma profissional na área, então posso cometer erros e por isso ficarei feliz em receber correções ou feedbacks.
+        </p>
+        <p><strong>Tópicos:</strong></p>
+        <ul>
+          <li>1. O que é um ataque de buffer overflow?</li>
+          <li>2. Como identificar a vulnerabilidade</li>
+          <li>3. Explorando um código vulnerável</li>
+          <li>4. Alterando valores de variáveis</li>
+          <li>5. Mitigações comuns</li>
+        </ul>
+
+        <h2 class="post-section">1. O que é buffer overflow?</h2>
+        <p>
+          O ataque de Buffer Overflow é um dos mais conhecidos na cibersegurança, graças a vulnerabilidades exploradas em exploits como EternalBlue — posteriormente utilizada para ataques cibernéticos em larga escala como o WannaCry e NotPetya — e Heartbleed — usada para o roubo de chaves SSL privadas de servidores e usuários ao redor do mundo.
+        </p>
+        <p>
+          Mas afinal, o que esse ataque envolve? Como o próprio nome sugere, buffer overflow é um “vazamento de buffer” (também conhecido como “estouro de buffer”), ou seja, é quando mandamos tantos dados que acabamos ultrapassando a capacidade de um buffer — que nada mais é do que uma área de memória utilizada para armazenar dados temporariamente.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/1.png" alt="Diagrama: argumento maior que o buffer atingindo outras áreas da memória" width="800" height="450">
+          <p class="post-image-caption">Figura 1: Ao passarmos um argumento muito maior que o buffer podemos atingir outras áreas da memória que não deveriam ser acessadas.</p>
+        </div>
+        <p>
+          No caso desse artigo, irei focar na exploração de buffers presentes na Stack.
+        </p>
+        <p>
+          Para isso, irei explicar de forma superficial alguns conceitos importantes, começando pela própria Stack — uma estrutura de dados que significa “pilha” e o próprio nome dá a entender como ela funciona. Podemos compará-la com uma pilha de livros, em que o primeiro a ser colocado será o último a ser retirado, um comportamento que chamamos de FILO (First-in, Last-out).
+        </p>
+        <p>
+          Mais especificamente, a Stack reside na memória RAM e é usada para gerenciamento de chamadas de função, armazenamento de variáveis locais e controle de fluxo. Junto a ela, temos espaços de endereçamento que são referenciados por registradores essenciais para a Stack: o ESP e o EBP.
+        </p>
+        <p>
+          É um padrão da arquitetura x86 (32 bits) ter registradores que começam com “E” (indicando que são uma “extensão” dos registradores anteriores de 16 bits, enquanto os de 64 bits começam com “R”), e as outras letras costumam indicar sua função. No caso do EBP, o BP vem de <em>base pointer</em> que traduz para ponteiro de base, ou seja, ele aponta para a base da stack, enquanto o ESP vem de <em>stack pointer</em> que traduz para ponteiro de stack e aponta para o topo da Stack.
+        </p>
+        <p>
+          Para servir de referência, abaixo está uma lista dos registradores mais importantes, suas funcionalidades e tipo. Já conhecemos o EBP e ESP, e mais para frente irei citar EIP e EAX.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/2.png" alt="Tabela de registradores x86" width="800" height="450">
+          <p class="post-image-caption">Figura 2: Registradores mais importantes, funcionalidades e tipo.</p>
+        </div>
+        <p>
+          Como já dito, a Stack é responsável por gerenciar chamadas de funções, de forma que cada uma terá seu próprio espaço na memória com suas variáveis, instruções, endereço de retorno e buffer. Esse espaço é chamado de Stack Frame.
+        </p>
+        <p>
+          Sabendo disso tudo, se fôssemos representar a Stack de forma simplificada, ela seria mais ou menos dessa forma: além do buffer teremos ainda um espaço a mais no Stack Frame onde podem ser colocadas variáveis e outras informações da função.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/3.png" alt="Representação simplificada da Stack" width="800" height="450">
+          <p class="post-image-caption">Figura 3: Representação simplificada da Stack.</p>
+        </div>
+
+        <h2 class="post-section">2. Como identificar a vulnerabilidade</h2>
+        <p>
+          Como o buffer overflow envolve ultrapassar o espaço de um buffer, podemos encontrar a vulnerabilidade caso o programa aceite argumentos com um número limitado de caracteres, mas não faça qualquer validação do tamanho da entrada em seu código. Assim, há uma grande possibilidade de ocorrer uma sobrescrita de dados na memória.
+        </p>
+        <p>
+          Exemplos de funções comuns em C/C++ que sozinhas não fazem validação de input são <code>gets()</code>, <code>strcpy()</code> e <code>scanf()</code>.
+        </p>
+        <p>
+          Sabendo disso, podemos criar um código simples para usar de exemplo na nossa prática:
+        </p>
+        <pre class="post-code">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(int argc, char *argv[]) {
+    char nome[64];
+    strcpy(nome, argv[1]);
+    return 0;
+}</pre>
+        <div class="post-image-wrap">
+          <img src="../img/4.png" alt="Código vulnerável de exemplo" width="800" height="450">
+          <p class="post-image-caption">Figura 4: Código vulnerável de exemplo.</p>
+        </div>
+        <p>
+          <strong>Explicação:</strong> O código acima não faz nada mais que criar uma variável chamada “nome” do tipo array de caracteres e com o tamanho de 64 bytes. Quando essa linha for executada, será criado um buffer na memória de tamanho 64 justamente para guardar esse valor. Depois, usamos a função <code>strcpy()</code> que pega o argumento que foi passado pelo usuário e o copia para a variável “nome”. Por fim, é usado <code>return 0;</code> para retornar o valor 0 e finalizar a função.
+        </p>
+        <p>
+          Podemos perceber que em momento nenhum uma validação é feita, como um <code>if</code> verificando se o tamanho da palavra não ultrapassa o limite da variável e consequentemente do buffer. Portanto, o código está vulnerável a buffer overflow.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/5.png" alt="Identificação da vulnerabilidade" width="800" height="450">
+          <p class="post-image-caption">Figura 5: Identificação da vulnerabilidade.</p>
+        </div>
+
+        <h2 class="post-section">3. Explorando um código vulnerável</h2>
+        <p>
+          Agora, vamos abrir o executável do nosso programa no Immunity Debugger, passando um argumento qualquer (que podemos colocar no momento em que escolhemos o programa):
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/6.png" alt="Immunity Debugger com executável aberto" width="800" height="450">
+          <p class="post-image-caption">Figura 6: Abrindo o executável no Immunity Debugger com um argumento.</p>
+        </div>
+        <p>
+          A primeira coisa que nos chama atenção é o código correspondente em assembly na janela superior esquerda. Lendo as linhas, podemos até deduzir algumas coisas, como nas instruções <code>PUSH EBP</code> e <code>MOV EBP, ESP</code> — por mais que você não entenda exatamente o que significa, sabemos que, se EBP e ESP estão sendo usados, então está havendo alguma atividade na Stack. E, como estamos no início, também podemos deduzir que está sendo reservado um espaço na Stack especificamente para a nossa função — ou seja, será criado um Stack Frame somente para ela, em que ficarão todos os seus dados, instruções e buffer (que, lembrando, será de tamanho 64).
+        </p>
+        <p>
+          Agora, vamos de fato “debuggar” nosso programa avançando de linha em linha com o botão de step-into acima da janela com o código em assembly (step-into corresponde ao botão selecionado, logo ao lado do pause). Com isso nosso código será executado linha por linha para acompanharmos as mudanças que ocorrem no decorrer da execução.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/7.png" alt="Step-into e execução linha a linha" width="800" height="450">
+          <p class="post-image-caption">Figura 7: Step-into e execução linha a linha.</p>
+        </div>
+        <p>
+          No momento que passarmos pelas instruções que irão criar o Stack Frame, poderemos ver um espaço sendo criado na memória na janela inferior à direita, entre os offsets 0061FEA8 e 0061FE80 — que, se formos analisar na janela logo acima, vemos que são exatamente os valores de EBP e ESP (indicando assim onde o Stack Frame começa e termina).
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/8.png" alt="Stack Frame entre EBP e ESP" width="800" height="450">
+          <p class="post-image-caption">Figura 8: Stack Frame entre EBP e ESP.</p>
+        </div>
+        <p>
+          Sabendo disso, podemos continuar até o momento em que o argumento for escrito na memória (no offset 0061FE90). Certo, esse seria o funcionamento esperado. Agora vamos passar vários A’s de forma que o argumento passado seja bem maior do que 64 caracteres e verificar o que acontece na memória:
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/9.png" alt="Buffer overflow sobrescrevendo EBP com 41414141" width="800" height="450">
+          <p class="post-image-caption">Figura 9: O argumento ultrapassou o buffer e sobrescreveu EBP. EBP agora tem o valor 41414141, pois em ASCII o caractere "A" é representado pelo valor 41.</p>
+        </div>
+        <p>
+          Se neste ponto seguirmos até chegar na instrução de retorno (RETN), o que vai acontecer é que o valor armazenado no registrador ESP é transferido para o registrador EIP, que é um registrador que aponta para a próxima instrução a ser executada pelo programa (por isso “IP” que vem de Instruction Pointer). Ou seja, agora podemos alterar seu valor de forma que tenhamos controle sobre o fluxo de execução do programa (e consequentemente, sobre todo seu funcionamento).
+        </p>
+        <p>
+          Isso pode ser aproveitado para o desenvolvimento de um exploit, por exemplo, em que o atacante envia uma série de dados que inclui um endereço específico. Esse endereço sobrescreve o valor original do EIP, redirecionando o programa para um local diferente na memória. Em seguida, o atacante inclui um shellcode, que é um código malicioso que será executado pelo programa quando ele seguir o novo endereço.
+        </p>
+        <p>
+          Desenvolver esse tipo de exploit requer todo um processo que não vou entrar em tantos detalhes nesse artigo (mas em um próximo, quem sabe), mas basicamente envolve:
+        </p>
+        <ul>
+          <li>Encontrar um bom endereço de retorno para o qual sobrescrever EIP, direcionando o programa para um local onde o shellcode pode ser executado corretamente. Muitas vezes, esse endereço aponta para uma instrução que pula para o topo da pilha (como uma instrução JMP ESP).</li>
+          <li>Encontrar caracteres inválidos (badchars) que o programa não aceita para que na hora de criar um shellcode nós saibamos quais caracteres não usar.</li>
+          <li>Montar um argumento de ataque que seja enviado ao programa. Ele deve ser composto por a) uma série de caracteres que preenche o buffer, b) seguido pelo endereço de retorno e c) pelo shellcode. Caso tudo funcione como o esperado, teremos acesso à shell do servidor hospedando o serviço vulnerável.</li>
+        </ul>
+        <div class="post-image-wrap">
+          <img src="../img/10.png" alt="Estrutura do exploit" width="800" height="450">
+          <p class="post-image-caption">Figura 10: Estrutura do exploit.</p>
+        </div>
+
+        <h2 class="post-section">4. Alterando valores de variáveis</h2>
+        <p>
+          Para explorar um pouco mais a nossa capacidade de sobrescrever a memória, vamos adicionar algumas linhas no nosso código:
+        </p>
+        <pre class="post-code">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(int argc, char *argv[]) {
+    char limite[64];
+    strcpy(limite, argv[1]);
+
+    volatile int variavel = 0;
+    if (variavel == 0x42434445) {
+        printf("Voce conseguiu! :D");
+    } else if (variavel != 0) {
+        printf("Quase la...");
+    } else {
+        printf("Tente novamente :/");
+    }
+    return 0;
+}</pre>
+        <p>
+          Agora, nosso objetivo não é apenas fazer um buffer overflow, mas também atingir uma variável criativamente chamada de ‘variavel’ e verificar se conseguimos mudar seu valor de 0 para 0x42434445 que, se convertido para char, seria BCDE.
+        </p>
+        <p>
+          Vamos abrir seu executável no Immunity Debugger para ver seu código em Assembly:
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/11.png" alt="Assembly com CMP EAX, 42434445" width="800" height="450">
+          <p class="post-image-caption">Figura 11: Na linha em destaque CMP EAX, 42434445 vemos que o registrador EAX armazena o valor da variável.</p>
+        </div>
+        <p>
+          Na linha em destaque <code>CMP EAX, 42434445</code> podemos ver que o registrador EAX é comparado com o valor que nossa variável deve ter, assim podemos deduzir que ele está armazenando seu valor e portanto é esse registrador que devemos alcançar — e de fato, o EAX é o registrador que costuma armazenar dados de operações aritméticas e lógicas, valores temporários e variáveis.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/12.png" alt="Registrador EAX e comparação" width="800" height="450">
+          <p class="post-image-caption">Figura 12: Registrador EAX e comparação.</p>
+        </div>
+        <p>
+          No fim, caso o EAX não seja igual a nenhum dos dois valores comparados (42434445 ou diferente de zero), o fluxo de execução seguirá normalmente até chegar no else.
+        </p>
+        <p>
+          Conhecendo nosso código podemos começar a testar a passagem de argumentos para atingir EAX. Vamos começar com um argumento simples e dentro do limite do buffer:
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/13.png" alt="Argumento dentro do limite do buffer" width="800" height="450">
+          <p class="post-image-caption">Figura 13: Teste com argumento dentro do limite.</p>
+        </div>
+        <p>
+          Certo. Agora vamos testar com um argumento um pouco maior que o tamanho do buffer (64) na linha de comando (usando python para facilitar):
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/14.png" alt="Argumento maior que o buffer na linha de comando" width="800" height="450">
+          <p class="post-image-caption">Figura 14: Argumento maior que o buffer na linha de comando.</p>
+        </div>
+        <pre class="post-code">python -c "print('A'*70)"</pre>
+        <p>
+          Pela resposta, podemos ver que de certa forma alcançamos a variável, pois cumprimos a condição de <code>variavel != 0</code>. E passando esse mesmo argumento no debugger, vemos que de fato EAX foi alterado — podemos ver que uma parte de EAX foi sobrescrita com 41, ou seja, com um caractere “A”.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/15.png" alt="EAX alterado com 41 (caractere A)" width="800" height="450">
+          <p class="post-image-caption">Figura 15: EAX alterado com 41 (caractere A).</p>
+        </div>
+        <p>
+          Agora, sabemos que EAX começa exatamente a partir da posição 65. Assim, basta passarmos 64 A’s seguidos de “BCDE”, certo?
+        </p>
+        <p>
+          Como podemos ver, não funcionou (caso contrário receberíamos a mensagem “você conseguiu!”), e verificando no debugger vemos o seguinte valor em EAX: em vez de serem armazenados os bytes 42 43 44 45 foram armazenados 45 44 43 42. Mas por quê?
+        </p>
+        <p>
+          Primeiro devemos entender o que significa <em>little endian</em>, que nada mais é do que a forma com a qual a maioria dos processadores armazenam seus dados: ao contrário. Mais especificamente, o byte menos significativo será sempre armazenado no menor endereço.
+        </p>
+        <p>
+          Ou seja, tudo que quisermos passar para a memória deve ser de trás pra frente, pois na hora que tudo for processado, as posições dos bytes serão invertidas. E, como cada letra é representada por um byte (correspondente a 2 caracteres em hexadecimal), basicamente devemos inverter sua ordem. Resumindo, em vez de passar BCDE devemos passar como argumento EDCB.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/16.png" alt="Little endian e ordem dos bytes" width="800" height="450">
+          <p class="post-image-caption">Figura 16: Little endian e ordem dos bytes.</p>
+        </div>
+        <pre class="post-code">python -c "print('A'*64 + 'EDCB')"</pre>
+        <p>
+          Deu certo! E confirmamos isso vendo o valor em EAX.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/17.png" alt="Sucesso ao alterar EAX com EDCB" width="800" height="450">
+          <p class="post-image-caption">Figura 17: Sucesso ao alterar EAX com EDCB.</p>
+        </div>
+        <p>
+          Agora, somos capazes de alterar valores de variáveis do programa apenas passando argumentos com um tamanho específico. E esse exemplo pode parecer simples, mas isso pode ser aplicado facilmente na alteração de atributos de qualquer programa, como no caso de um software remoto — em que poderíamos por exemplo acessar e mudar a senha em uma tela de login — ou até um jogo — para alterar o valor de uma barra de vida, XP ou moedas.
+        </p>
+
+        <h2 class="post-section">5. Mitigações comuns</h2>
+        <p>
+          Podemos adotar diversas técnicas para evitar ataques de buffer overflow, entre elas:
+        </p>
+        <ul>
+          <li><strong>Validação e limitação no código</strong> usando estruturas como <code>if()</code> e <code>sizeof()</code>.</li>
+          <li><strong>Uso de funções mais seguras</strong> como <code>strncpy()</code> e <code>fgets()</code> que, além de ajudarem a evitar problemas ao copiar ou formatar dados, não aceitam mais que o tamanho de entrada.</li>
+          <li><strong>Inserção de stack canaries</strong>, que são valores específicos colocados entre o buffer e o retorno da função. Caso um buffer overflow ocorra, esse valor provavelmente irá mudar, e antes de chamar o retorno da função o sistema irá notar essa mudança e bloquear o resto da execução impedindo que um ataque ocorra.</li>
+          <li>E, no caso de usar buffer overflow para exploração de exploits, podemos usar <strong>mecanismos de segurança</strong> como DEP (impede que dados injetados na memória sejam processados como código) e ASLR (muda aleatoriamente os endereços das instruções a cada execução do programa).</li>
+        </ul>
+        <div class="post-image-wrap">
+          <img src="../img/18.png" alt="Mitigações e mecanismos de segurança" width="800" height="450">
+          <p class="post-image-caption">Figura 18: Mitigações e mecanismos de segurança.</p>
+        </div>
+        <p>
+          Além disso tudo, temos uma proteção naturalmente usada pelo sistema operacional: as <em>guard pages</em>, que nada mais são do que espaços de memória vazios entre segmentos que não devem ser acessados e que, caso forem atingidas em um buffer overflow, o sistema em vez de finalizar a execução irá retornar um erro de segmentation fault.
+        </p>
+        <p>
+          Assim, podemos concluir que explorar e entender vulnerabilidades de buffer overflow pode nos ajudar bastante a entender mais a fundo a segurança em baixo nível. Se você se interessou pelo assunto, recomendo continuar estudando a respeito — entender conceitos de arquitetura de computadores e sistemas operacionais são essenciais, além da possibilidade de você procurar diretamente sobre uma vulnerabilidade que lhe interessar e ir pesquisando mais a fundo à medida que as dúvidas forem surgindo.
+        </p>
+        <div class="post-image-wrap">
+          <img src="../img/19.png" alt="Conclusão e próximos passos" width="800" height="450">
+          <p class="post-image-caption">Figura 19: Conclusão e próximos passos.</p>
+        </div>
+
+        <h2 class="post-section">Referências</h2>
+        <ul>
+          <li>Learn Buffer Overflows through Visuals - Pwn challenges for beginners, explained with stories and animations. (lightfootlabs.io)</li>
+          <li>Buffer Overflow Attack - OWASP Foundation (owasp.org)</li>
+          <li>Buffer Overflow - OWASP Foundation (owasp.org)</li>
+        </ul>
+      </div>
+    </main>
+
+  
+  </div>
+</body>
+</html>

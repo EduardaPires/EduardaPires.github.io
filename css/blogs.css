@@ -1,0 +1,77 @@
+/* blogs.html - listagem de posts com filtros */
+
+.blog-layout {
+  display: flex;
+  min-height: 600px;
+  background: #0b0b0b;
+}
+
+.sidebar {
+  width: 260px;
+  padding: 25px;
+  border-right: 1px solid #232222;
+  border-right-
+  background: #020202;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  background: #0b0b0b;
+  
+}
+
+.sidebar h2 {
+  font-size: 17px;
+  color: #50c96e;
+}
+
+.search-box input {
+  width: 100%;
+  background: #000;
+  border: 1px solid #50c96e;
+  color: #50c96e;
+  padding: 10px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-item {
+  display: flex;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.filter-item input {
+  accent-color: #50c96e;
+  transform: scale(1.2);
+}
+
+.content {
+  flex: 1;
+  padding: 40px;
+}
+
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.post {
+  border: 1px solid #31994b;
+  padding: 20px;
+  background: #020202;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.post:hover {
+  box-shadow: 0 0 14px rgba(49, 209, 71, 0.35), 0 0 28px rgba(82, 232, 106, 0.1);
+  transform: translateY(-3px);
+}

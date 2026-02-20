@@ -1,0 +1,81 @@
+/* index.html - página inicial */
+
+.pagetitle {
+  margin: 20px 0 10px 0;
+  padding-left: 40px;
+}
+
+.hero {
+  padding: 40px;
+}
+
+.about {
+  padding: 10px 40px 30px 40px;
+  color: #50c96e;
+  font-size: 16px;
+  max-width: 900px;
+}
+
+.posts {
+  padding: 10px 40px 30px 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
+
+}
+
+.card {
+  border: 1px solid #232222;
+  padding: 30px;
+  background: #101010;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
+      width: 100%;
+ line-height: 2;
+    padding-bottom: 10%; 
+    color: #cbcaca;
+      border-radius: 8px;
+   
+}
+
+.card h2 {
+  font-size: 20px;
+}
+
+.card:hover{
+  transform: translateY(-2px);
+  border-color: #31994b;
+  
+}
+
+.tablewrap {
+  padding: 10px 40px 30px 40px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 0.1px solid #232222;
+  padding: 10px;
+  font-size: 15px;
+}
+
+th {
+  background: #31994b;
+  color: #000;
+}
+
+td {
+  color: #50c96e;
+}
+
+tr:nth-child(even) {
+  background: #001a00;
+}
+

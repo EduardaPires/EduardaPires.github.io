@@ -1,0 +1,18 @@
+/* whoami.html - página sobre */
+
+.content {
+  padding: 40px;
+}
+
+pre {
+  border: 1px solid #1a1a1a;
+  padding: 30px;
+  background: #101010;
+  margin: 30px 130px 20px 60px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  text-align: justify;
+    color: #cbcaca;
+    font-family: monospace;
+
+}
