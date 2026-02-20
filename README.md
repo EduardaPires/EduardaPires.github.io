@@ -1,1 +1,1 @@
-a
+Blog pessoal criado com o objetivo de me incentivar a criar publicações relacionadas aos assuntos que estou estudando, além de contribuir para tornar conhecimentos de baixo nível e reversing mais acessíveis por meio da explicação de conceitos importantes, resoluções de desafios e desenvolvimento de casos de uso.
