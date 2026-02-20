@@ -1,4 +1,4 @@
-/* blogs.html - listagem de posts com filtros */
+
 
 .blog-layout {
   display: flex;
@@ -10,7 +10,6 @@
   width: 260px;
   padding: 25px;
   border-right: 1px solid #232222;
-  border-right-
   background: #020202;
   display: flex;
   flex-direction: column;

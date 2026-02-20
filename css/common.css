@@ -1,7 +1,5 @@
-/* ============================================
-   malware.lab - Estilos compartilhados
-   Alterações aqui refletem em todas as páginas
-   ============================================ */
+
+ 
 
 * {
   margin: 0;
@@ -134,7 +132,7 @@ header {
 }
 
 
-/* Títulos e textos maiores + blocos de código: JetBrains Mono (efeitos mantidos nos seletores acima) */
+
 h1, h3, h4, h5, h6,
 .logo-main, .logo-sub,
 .nav-right, .nav-right a,
