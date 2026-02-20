@@ -1,7 +1,10 @@
 const data = [
-
   { title: "buffer overflow baseado em Stack", tag: "vulnerabilidades", url: "pages/post5.html" }
 ];
+
+const postsDiv = document.getElementById("posts");
+const postsTitleEl = document.getElementById("posts-title");
+const checks = document.querySelectorAll("input[type=checkbox]");
 
 function render() {
 
