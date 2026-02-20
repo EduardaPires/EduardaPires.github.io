@@ -36,7 +36,7 @@ function render() {
       "<span class='tag'>" + p.tag + "</span>" +
       "<h3>" + p.title + "</h3>";
 
-    // 🔥 redirecionamento
+ 
     el.addEventListener("click", function () {
       window.location.href = p.url;
     });
