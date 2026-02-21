@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../blog/css"
+		},
+		{
+			"path": "../blog/img"
+		},
+		{
+			"path": "../blog/pages"
+		}
+	],
+	"settings": {}
+}
