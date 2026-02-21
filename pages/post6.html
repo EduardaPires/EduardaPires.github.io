@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Como fazer um unpacking manual -  resolução do crackme "unpackme1.exe" - 0xED04RD4's blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/post.css">
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="logo">
+        <div class="logo-main">0xED04RD4's blog <span class="cursor"></span></div>
+        <div class="logo-sub">malware analysis • reversing • low level</div>
+      </div>
+      <div class="nav-right">
+        <a href="../index.html">home</a>
+        <a href="../whoami.html">whoami</a>
+        <a href="../blogs.html">posts</a>
+      </div>
+    </header>
+
+    <main class="post-content-area">
+      <div class="post-header">
+        <h1 class="post-title">Como fazer um unpacking manual -  resolução do crackme "unpackme1.exe"</h1>
+        <time class="post-date" datetime="2026-02-20">20 de fevereiro de 2026</time>
+      </div>
+
+      <div class="post-body">
+
+<p>Como fazer um unpacking manual -  resolução do crackme "unpackme1.exe"</p>
+
+<p>O desafio proposto tem os seguintes objetivos:</p>
+
+<ul>
+<li> Efetuar o unpack de um arquivo de maneira manual, para fins de estudo.</li>
+<li> Quebrar a validação dele através de patch (arquivo e memória).</li>
+<li> Criar um keygen para a amostra utilizando o Python.</li>
+</ul>
+
+<h2 class="post-section">Realizando um unpack manual</h2>
+
+<p>No github do desafio <code>https://github.com/h2hconference/H2HCMagazine/tree/master/15</code> é disponibilizado para download um arquivo executável chamado "unpackme1.exe".</p>
+
+<p>Meu primeiro passo foi usar o Detect It Easy para analisar o arquivo e entender melhor sua natureza.</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image1.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Como é possível observar, o arquivo é um PE32 - ou seja, um executável de 32 bits - que foi modificado por um empacotador chamado "UPX".</p>
+
+<p>Uma característica interessante que também observei foi que o arquivo empacotado permanece com sua extensão .exe - e de fato, basta clicar no "unpack1.exe" para o mesmo ser executado, diferentemente de outros arquivos compactados como .rar, .zip e .7z que precisam passar por um processo de extração antes.</p>
+
+<p>Sabendo disso, podemos abrir o arquivo no debugger x32dbg e observar mais características sobre ele.</p>
+
+<p>Comecei então verificando seu mapa de memória, no qual encontrei suas seções:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image2.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>É possível observar que a única seção comum entre executáveis e que está presente no arquivo é a .rsrc (diminutivo para Resources), feita para armazenar seus recursos (como ícones, imagens, strings, etc). Além disso, também temos duas seções com o nome "mbin0" e "mbin1".</p>
+
+<p>Quando vamos na janela de Símbolos, identificamos o AdressOfEntrPoint - ou seja, o endereço da primeira instrução do programa - com o valor 00409D10.</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image3.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>E retomando ao mapa de memória, é possível concluir que o programa vai começar na seção "mbin1", pois ela começa em 00409000 e tem um tamanho de 1000 bytes.
+Além disso, analisando o conteúdo no despejo de memória de cada seção podemos percebemos que a seção "mbin0" se encontra vazia, diferentemente da "mbin1" e ".rsrc".</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image4.png" alt="Imagem" width="800">
+  
+</div>
+
+<h2 class="post-section">Análise Dinâmica com x32dbg</h2>
+
+<p>Iniciando a depuração do arquivo, que como esperado começa na seção "mbin1", podemos observar uma interação com os registradores <code>ESI</code> e <code>EDI</code>, que costumam ser usados como ponteiros ou índices.</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image5.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>É passado para <code>ESI</code> o endereço 409000, que é o início da seção "mbin1", e para <code>EDI</code> é passado <code>ESI-800</code>, que resulta em 401000 e corresponde ao início da seção "mbin0".</p>
+
+<p>Depois, temos um jump para uma série de instruções:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image6.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Como podemos ver, o registrador <code>AL</code> é usado para pegar o valor dentro do endereço <code>ESI</code>, que está apontando para a seção mbin1, e em seguida passá-lo para o valor armazenado no endereço de <code>EDI</code>, que aponta para a seção mbin0. E a cada iteração, <code>ESI</code> e <code>EDI</code> são incrementados para que apontem para o byte na posição seguinte. No decorrer da depuração pode-se notar que esse trecho de código é executado várias vezes por meios de jumps condicionais, e no meio desse processo o valor dentro do endereço de <code>ESI</code> (contendo o conteúdo de mbin1) passa por uma série de operações, que são responsáveis por realizar o processo de decodificação dos seus bytes para que eles sejam adicionados de forma sequencial na seção "mbin0".</p>
+
+<p>Dessa forma, a seção "mbin0" anteriormente vazia é preenchida em tempo de execução e vai armazenar o resultado descompactado do conteúdo da seção "mbin1".</p>
+
+<p>A fim de ver o conteúdo final de "mbin0", coloquei um breakpoint em um ponto do código em que as iterações de descompressão já tenham terminado. Dessa forma, foi possível ver no despejo de memória a estrutura original do executável, com suas devidas seções e conteúdo.</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image7.png" alt="Imagem" width="800">
+  
+</div>
+
+<h2 class="post-section">Chamadas de DLLs</h2>
+
+<p>Ainda dentro do algoritmo de descompressão de "mbin1", são feitas várias chamadas para bibliotecas que, quando vamos verificar no despejo de memória, estão sendo referenciadas na seção .rsrc:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image8.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Baseado em seu conteúdo podemos concluir que as DLLs das quais o executável depende para ser executado são chamadas ainda na seção ."mbin1" e estão armazenadas em .rsrc ao invés de serem chamadas em "mbin0". Desse modo, mesmo tendo acesso ao conteúdo do arquivo original, ainda precisamos do código responsável por realizar a descompressão para que ele execute normalmente, pois caso o contrário o mesmo não terá as referências das DLLs chamadas.</p>
+
+<p>Para comprovar isso também podemos analisar alguns valores no cabeçalho opcional do arquivo comprimido, como o endereço e tamanho virtual do diretório de importações. Para facilitar a visualização e o processo, usei o CFF Explorer:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image9.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Como podemos ver, o diretório de importação tem o endereço A4E0 e tamanho 150, que somados ao ImageBase do arquivo (400000) resultam em um intervalo entre 40A4E0 e 40A630 - a região na seção .rsrc em que as DLLs são referenciadas.</p>
+
+<p>Depois que todas as chamadas são feitas, temos finalmente um jump para a seção "mbin0", em que o arquivo vai executar o código original.</p>
+
+<h2 class="post-section">Gerando o Executável Descompactado</h2>
+
+<p>Neste ponto, conseguimos visualizar o conteúdo descompactado do arquivo original, mas podemos ir além e tentar gerar um executável já descomprimido e funcional, que não dependa de um código de descompressão ou de um debugger para ser analisado.</p>
+
+<p>Uma alternativa simples é utilizar o plugin "Scylla" do x32dbg, que não só gera dumps do programa como também oferece informações detalhadas sobre a Import Address Table (IAT), a tabela que contém o endereço das funções externas (APIs) que serão usadas pelo programa.</p>
+
+<p>Porém, antes de abrir o Scylla devemos garantir que estamos na instância certa do programa, ou seja, que estamos no início da execução do "mbin0" pois é onde queremos que fique o novo entrypoint do nosso novo arquivo.</p>
+
+<p>Para isso, coloquei um breakpoint na instrução de jump 401000, que é o início da seção "mbin0", e avancei para a instrução seguinte. Dessa forma, quando abrirmos o plugin veremos um campo chamado OEP (Original Entrypoint) com o valor 401000.</p>
+
+<p>Agora, podemos começar clicando em IAT AutoSearch para obter o endereço virtual e o tamanho da IAT:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image10.png" alt="Imagem" width="800">
+  
+</div>
+
+<p> Depois disso, vamos em "Get Imports" para ver os imports necessários para nosso arquivo funcionar, e seremos apresentados com essa lista:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image11.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Como podemos ver, a maioria dos imports foram identificados, com exceção de um com o nome "?" e com o endereço virtual em 0x31AC.</p>
+
+<p>Para entender o problema, fui procurar pelo seu conteúdo na região de memória da IAT e pude observar o momento em que os endereços das API de importação são incluídos na IAT, que ocorre no seguinte trecho de código:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image12.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Depois que todas a chamadas são feitas e a IAT está praticamente preenchida, é possível ver uma série de instruções envolvendo a API "MessageBoxA":</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image13.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Podemos ver que o valor 0x68 - equivalente a instrução push - é passado para o endereço 409EE0, localizado na seção "mbin1".</p>
+
+<p>Depois disso, o endereço de "MessageBox" é passado para o endereço 409EE1, complementando a instrução no push resultando em <code>push [MessageBoxA]</code>. E então, logo após essa instrução é adicionado 0xC3 que representa a instrução de retorno <code>ret</code>.</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image14.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Por fim, vemos que o endereço 409EE0 agora contendo a instrução <code>push [MessageBoxA]</code> sobrescreve o valor do ponteiro que antes levava ao verdadeiro endereço da função MessageBoxA.</p>
+
+<p>Dessa forma, podemos concluir que essa manipulação de endereços armazenados na IAT é a causa do problema, e agora que sabemos qual API a importação anteriormente desconhecida representa, podemos corrigir este erro voltando para a tela do Scylla e expandindo a DLL de nome "?" e clicando duas vezes na sua API. Assim, irá aparecer uma tela na qual podemos selecionar a API que de fato o programa deve chamar: MessageBoxA dentro de user32.dll.</p>
+
+<p>Depois disso, a lista de imports será automaticamente atualizada e podemos ver que agora todos eles foram reconhecidos:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image15.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Agora que não temos mais nenhum problema de importação, podemos finalmente gerar nosso arquivo descompactado clicando em "Dump".</p>
+
+<p>Porém, se tentarmos executar de im<code>EDI</code>ato o novo arquivo, iremos nos deparar com o seguinte erro:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image16.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>Neste caso, para resolver o problema basta clicar em "Fix Dump" no Scylla e selecionar o arquivo, e assim será criada uma cópia dele porém com uma seção a mais voltada para a sincronização das importações.</p>
+
+<p>Agora, clicando no novo executável, podemos ver a mesma tela que aparece quando executamos sua versão compactada:</p>
+
+<div class="post-image-wrap">
+  <img src="../img/image17.png" alt="Imagem" width="800">
+  
+</div>
+
+<p>E com isso, temos finalmente acesso ao programa original e desempacotado :)</p>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>
