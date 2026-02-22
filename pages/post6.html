@@ -37,14 +37,20 @@
 
 <p>No github do desafio <code>https://github.com/h2hconference/H2HCMagazine/tree/master/15</code> é disponibilizado para download um arquivo executável chamado "unpackme1.exe".</p>
 
-<p>Meu primeiro passo foi usar o Detect It Easy para analisar o arquivo e entender melhor sua natureza.</p>
+<p>Meu primeiro passo foi usar a ferramenta de análise de arquivos chamada Detect It Easy (DIE) para analisar o arquivo e entender melhor sua natureza.</p>
 
 <div class="post-image-wrap">
   <img src="../img/image1.png" alt="Imagem" width="800">
   
 </div>
 
-<p>Como é possível observar, o arquivo é um PE32 - ou seja, um executável de 32 bits - que foi modificado por um empacotador chamado "UPX".</p>
+<p>Como é possível observar, o arquivo é um PE32 - ou seja, um executável de 32 bits - que foi modificado por um empacotador chamado "UPX". 
+  
+<pre class="post-code"><p>Empacotadores, falando de forma geral, têm o objetivo de modificar um executável por meio de compressão ou ofuscação, 
+  "escondendo" seu conteúdo original dentro de uma nova estrutura, de forma que o arquivo continua sendo um .exe, mas seu código real não fica visível diretamente no disco - dificultando a análise e detecção de ferramentas de segurança - e só é recuperado durante sua execução.
+  Por isso ao analisar estaticamente um binário empacotado costumamos encontrar seções incomuns, poucas importações ou estruturas que não seguem o padrão esperado de um arquivo PE tradicional.
+  No caso do UPX (Ultimate Packer for eXecutables) em específico, o mesmo trata-se de um empacotador open source bastante conhecido que comprime executáveis e adiciona um algoritmo responsável por descompactar o código original na memória e então transferir o fluxo da execução para o entrypoint original (OEP). 
+  É justamente esse processo que iremos acompanhar no unpacking manual a seguir. </p></pre>
 
 <p>Uma característica interessante que também observei foi que o arquivo empacotado permanece com sua extensão .exe - e de fato, basta clicar no "unpack1.exe" para o mesmo ser executado, diferentemente de outros arquivos compactados como .rar, .zip e .7z que precisam passar por um processo de extração antes.</p>
 
