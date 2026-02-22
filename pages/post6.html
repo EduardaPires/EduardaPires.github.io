@@ -65,14 +65,14 @@
 
 <p>É possível observar que a única seção comum entre executáveis e que está presente no arquivo é a .rsrc (diminutivo para Resources), feita para armazenar seus recursos (como ícones, imagens, strings, etc). Além disso, também temos duas seções com o nome "mbin0" e "mbin1".</p>
 
-<p>Quando vamos na janela de Símbolos, identificamos o AdressOfEntrPoint - ou seja, o endereço da primeira instrução do programa - com o valor 0x00409D10.</p>
+<p>Quando vamos na janela de Símbolos, identificamos o AdressOfEntrPoint - ou seja, o endereço da primeira instrução do programa - com o valor <code>0x00409D10</code>.</p>
 
 <div class="post-image-wrap">
   <img src="../img/image3.png" alt="Imagem" width="800">
   
 </div>
 
-<p>E retomando ao mapa de memória, é possível concluir que o programa vai começar na seção "mbin1", pois ela começa em 0x00409000 e tem um tamanho de 1000 bytes.
+<p>E retomando ao mapa de memória, é possível concluir que o programa vai começar na seção "mbin1", pois ela começa em <code>0x00409000</code> e tem um tamanho de 1000 bytes.
 Além disso, analisando o conteúdo no despejo de memória de cada seção podemos perceber que a seção "mbin0" se encontra vazia, diferentemente da "mbin1" e ".rsrc".</p>
 
 <div class="post-image-wrap">
@@ -89,7 +89,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>É passado para <code>ESI</code> o endereço 0x00409000, que é o início da seção "mbin1", e para <code>EDI</code> é passado <code>ESI-800</code>, que resulta em 0x00401000 e corresponde ao início da seção "mbin0".</p>
+<p>É passado para <code>ESI</code> o endereço <code>0x00409000</code>, que é o início da seção "mbin1", e para <code>EDI</code> é passado <code>ESI-800</code>, que resulta em <code>0x00401000</code> e corresponde ao início da seção "mbin0".</p>
 
 <p>Depois, temos um jump para uma série de instruções:</p>
 
@@ -127,7 +127,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>Como podemos ver, o diretório de importação tem o endereço 0xA4E0 e tamanho 150, que somados ao ImageBase do arquivo (0x400000) resultam em um intervalo entre 0x40A4E0 e 0x40A630 - a região na seção .rsrc em que as DLLs são referenciadas.</p>
+<p>Como podemos ver, o diretório de importação tem o endereço 0xA4E0 e tamanho 150, que somados ao ImageBase do arquivo (<code>0x400000</code>) resultam em um intervalo entre 0x40A4E0 e 0x40A630 - a região na seção .rsrc em que as DLLs são referenciadas.</p>
 
 <p>Depois que todas as chamadas são feitas, temos finalmente um jump para a seção "mbin0", em que o arquivo vai executar o código original.</p>
 
@@ -175,16 +175,16 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>Podemos ver que o valor 0x68 - equivalente a instrução <code>PUSH</code> - é passado para o endereço 0x409EE0, localizado na seção "mbin1".</p>
+<p>Podemos ver que o valor 0x68 - equivalente a instrução <code>PUSH</code> - é passado para o endereço <code>0x409EE0</code>, localizado na seção "mbin1".</p>
 
-<p>Depois disso, o endereço da API "MessageBox" é passado para o endereço 0x409EE1, complementando a instrução no byte anterior e resultando em <code>push [MessageBoxA]</code>. E então, logo após essa instrução é adicionado 0xC3, que representa a instrução de retorno <code>RET</code>.</p>
+<p>Depois disso, o endereço da API "MessageBox" é passado para o endereço <code>0x409EE1</code>, complementando a instrução no byte anterior e resultando em <code>push [MessageBoxA]</code>. E então, logo após essa instrução é adicionado 0xC3, que representa a instrução de retorno <code>RET</code>.</p>
 
 <div class="post-image-wrap">
   <img src="../img/image14.png" alt="Imagem" width="800">
   
 </div>
 
-<p>Por fim, vemos que o endereço 0x409EE0 agora contendo a instrução <code>push [MessageBoxA]</code> sobrescreve o valor do ponteiro que antes levava ao verdadeiro endereço da função <code>MessageBoxA</code>.</p>
+<p>Por fim, vemos que o endereço <code>0x409EE0</code> agora contendo a instrução <code>push [MessageBoxA]</code> sobrescreve o valor do ponteiro que antes levava ao verdadeiro endereço da função <code>MessageBoxA</code>.</p>
 
 <p>Dessa forma, podemos concluir que essa manipulação dos endereços armazenados na IAT é a causa do problema, pois o ponteiro que deveria levar diretamente ao endereço real da API <code>MessageBoxA</code> dentro da sua DLL correspondente foi alterado para apontar primeiro para uma região de memória intermediária. E, como o Scylla espera encontrar na IAT o endereço real da função importada, esse redirecionamento acaba impedindo que ele reconheça automaticamente qual API está sendo utilizada.</p>
 
