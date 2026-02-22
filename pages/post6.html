@@ -119,7 +119,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 
 <p>Baseado em seu conteúdo podemos concluir que as DLLs das quais o executável depende para ser executado são chamadas ainda na seção "mbin1" e estão armazenadas em .rsrc ao invés de serem chamadas em "mbin0". Desse modo, mesmo tendo acesso ao conteúdo do arquivo original, ainda precisamos do código responsável por realizar a descompressão para que ele execute normalmente, pois caso o contrário o mesmo não terá as referências das DLLs chamadas.</p>
 
-<p>Para comprovar isso também podemos analisar alguns valores no cabeçalho opcional do arquivo comprimido, como o endereço e tamanho virtual do diretório de importações. Para facilitar a visualização e o processo, usei o CFF Explorer:</p>
+<p>Para comprovar isso também podemos analisar alguns valores no cabeçalho opcional do arquivo comprimido, como o endereço e tamanho virtual do diretório de importações. Para facilitar a visualização e o processo, usei a ferramenta de análise e edição de arquivos PE "CFF Explorer":</p>
 
 <div class="post-image-wrap">
   <img src="../img/image9.png" alt="Imagem" width="800">
