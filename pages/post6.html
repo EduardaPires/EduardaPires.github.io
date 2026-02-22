@@ -29,13 +29,13 @@
 
       <div class="post-body">
 
-<p>Esse write-up tem o objetivo de efetuar o unpack do arquivo "unpackme1.exe" de maneira manual para fins de estudo. O mesmo se trata de um crackme criado por Fernando Mercês para o desafio "Unpacking Manual 101" na 15° edição da H2HC (<code>https://github.com/h2hconference/H2HCMagazine/blob/master/RevistaH2HC_15.pdf</code>)
+<p>Fiz esse write-up há cerca de um ano para dar início as minhas práticas de unpaking, e antes de publicar nesse blog decidi incrementar seu conteúdo para adicionar um pouco mais de detalhes e contexto. Nele, realizo o unpack manual do arquivo "unpackme1.exe", um crackme criado por Fernando Mercês para o desafio "Unpacking Manual 101" na 15° edição da H2HC (revista da edição disponível em <code><a href="https://github.com/h2hconference/H2HCMagazine/blob/master/RevistaH2HC_15.pdf">https://github.com/h2hconference/H2HCMagazine/blob/master/RevistaH2HC_15.pdf</a></code>)
 
 </ul>
 
 <h2 class="post-section">Realizando um unpack manual</h2>
 
-<p>No github do desafio <code>https://github.com/h2hconference/H2HCMagazine/tree/master/15</code> é disponibilizado para download um arquivo executável chamado "unpackme1.exe".</p>
+<p>No github do desafio <code><a href="https://github.com/h2hconference/H2HCMagazine/tree/master/15">https://github.com/h2hconference/H2HCMagazine/tree/master/15</a></code> é disponibilizado para download um arquivo executável chamado "unpackme1.exe".</p>
 
 <p>Meu primeiro passo foi usar a ferramenta de análise de arquivos chamada Detect It Easy (DIE) para analisar o arquivo e entender melhor sua natureza.</p>
 
@@ -47,7 +47,7 @@
 <p>Como é possível observar, o arquivo é um PE32 - ou seja, um executável de 32 bits - que foi modificado por um empacotador chamado "UPX". 
   
 <pre class="post-code"><p>Empacotadores, falando de forma geral, têm o objetivo de modificar um executável por meio de compressão ou ofuscação, 
-  "escondendo" seu conteúdo original dentro de uma nova estrutura, de forma que o arquivo continua sendo um .exe, mas seu código real não fica visível diretamente no disco - dificultando a análise e detecção de ferramentas de segurança - e só é recuperado durante sua execução.
+  "escondendo" seu conteúdo original dentro de uma nova estrutura, mas seu código real não fica visível diretamente no disco - dificultando a análise e detecção de ferramentas de segurança - e só é recuperado durante sua execução.
   Por isso ao analisar estaticamente um binário empacotado costumamos encontrar seções incomuns, poucas importações ou estruturas que não seguem o padrão esperado de um arquivo PE tradicional.
   No caso do UPX (Ultimate Packer for eXecutables) em específico, o mesmo trata-se de um empacotador open source bastante conhecido que comprime executáveis e adiciona um algoritmo responsável por descompactar o código original na memória e então transferir o fluxo da execução para o entrypoint original (OEP). 
   É justamente esse processo que iremos acompanhar no unpacking manual a seguir. </p></pre>
@@ -65,15 +65,15 @@
 
 <p>É possível observar que a única seção comum entre executáveis e que está presente no arquivo é a .rsrc (diminutivo para Resources), feita para armazenar seus recursos (como ícones, imagens, strings, etc). Além disso, também temos duas seções com o nome "mbin0" e "mbin1".</p>
 
-<p>Quando vamos na janela de Símbolos, identificamos o AdressOfEntrPoint - ou seja, o endereço da primeira instrução do programa - com o valor 00409D10.</p>
+<p>Quando vamos na janela de Símbolos, identificamos o AdressOfEntrPoint - ou seja, o endereço da primeira instrução do programa - com o valor 0x00409D10.</p>
 
 <div class="post-image-wrap">
   <img src="../img/image3.png" alt="Imagem" width="800">
   
 </div>
 
-<p>E retomando ao mapa de memória, é possível concluir que o programa vai começar na seção "mbin1", pois ela começa em 00409000 e tem um tamanho de 1000 bytes.
-Além disso, analisando o conteúdo no despejo de memória de cada seção podemos percebemos que a seção "mbin0" se encontra vazia, diferentemente da "mbin1" e ".rsrc".</p>
+<p>E retomando ao mapa de memória, é possível concluir que o programa vai começar na seção "mbin1", pois ela começa em 0x00409000 e tem um tamanho de 1000 bytes.
+Além disso, analisando o conteúdo no despejo de memória de cada seção podemos perceber que a seção "mbin0" se encontra vazia, diferentemente da "mbin1" e ".rsrc".</p>
 
 <div class="post-image-wrap">
   <img src="../img/image4.png" alt="Imagem" width="800">
@@ -82,14 +82,14 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 
 <h2 class="post-section">Análise Dinâmica com x32dbg</h2>
 
-<p>Iniciando a depuração do arquivo, que como esperado começa na seção "mbin1", podemos observar uma interação com os registradores <code>ESI</code> e <code>EDI</code>, que costumam ser usados como ponteiros ou índices.</p>
+<p>Iniciando a depuração do arquivo, que como esperado começa na seção "mbin1", podemos observar uma interação com os registradores <code>ESI</code> e <code>EDI</code>, que costumam ser usados como ponteiros ou índices (em que <code>ESI</code> aponta para o endereço de origem e <code>EDI</code> para o endereço de destino).</p>
 
 <div class="post-image-wrap">
   <img src="../img/image5.png" alt="Imagem" width="800">
   
 </div>
 
-<p>É passado para <code>ESI</code> o endereço 409000, que é o início da seção "mbin1", e para <code>EDI</code> é passado <code>ESI-800</code>, que resulta em 401000 e corresponde ao início da seção "mbin0".</p>
+<p>É passado para <code>ESI</code> o endereço 0x00409000, que é o início da seção "mbin1", e para <code>EDI</code> é passado <code>ESI-800</code>, que resulta em 0x00401000 e corresponde ao início da seção "mbin0".</p>
 
 <p>Depois, temos um jump para uma série de instruções:</p>
 
@@ -98,7 +98,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>Como podemos ver, o registrador <code>AL</code> é usado para pegar o valor dentro do endereço <code>ESI</code>, que está apontando para a seção mbin1, e em seguida passá-lo para o valor armazenado no endereço de <code>EDI</code>, que aponta para a seção mbin0. E a cada iteração, <code>ESI</code> e <code>EDI</code> são incrementados para que apontem para o byte na posição seguinte. No decorrer da depuração pode-se notar que esse trecho de código é executado várias vezes por meios de jumps condicionais, e no meio desse processo o valor dentro do endereço de <code>ESI</code> (contendo o conteúdo de mbin1) passa por uma série de operações, que são responsáveis por realizar o processo de decodificação dos seus bytes para que eles sejam adicionados de forma sequencial na seção "mbin0".</p>
+<p>Como podemos ver, o registrador <code>AL</code> (que constitui segmento de 8 bits do registrador <code>EAX</code>) é usado para pegar o valor dentro do endereço de <code>ESI</code>, que está apontando para a seção mbin1, e em seguida passá-lo para o valor armazenado no endereço de <code>EDI</code>, que aponta para a seção mbin0. E a cada iteração, <code>ESI</code> e <code>EDI</code> são incrementados para que apontem para o byte na posição seguinte. No decorrer da depuração pode-se notar que esse trecho de código é executado várias vezes por meios de instruções de <code>JUMP</code> condicionais, e no meio desse processo o valor dentro do endereço de <code>ESI</code> (contendo o conteúdo de mbin1) passa por uma série de operações, que são responsáveis por realizar o processo de decodificação dos seus bytes para que eles sejam adicionados de forma sequencial na seção "mbin0".</p>
 
 <p>Dessa forma, a seção "mbin0" anteriormente vazia é preenchida em tempo de execução e vai armazenar o resultado descompactado do conteúdo da seção "mbin1".</p>
 
@@ -118,7 +118,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>Baseado em seu conteúdo podemos concluir que as DLLs das quais o executável depende para ser executado são chamadas ainda na seção ."mbin1" e estão armazenadas em .rsrc ao invés de serem chamadas em "mbin0". Desse modo, mesmo tendo acesso ao conteúdo do arquivo original, ainda precisamos do código responsável por realizar a descompressão para que ele execute normalmente, pois caso o contrário o mesmo não terá as referências das DLLs chamadas.</p>
+<p>Baseado em seu conteúdo podemos concluir que as DLLs das quais o executável depende para ser executado são chamadas ainda na seção "mbin1" e estão armazenadas em .rsrc ao invés de serem chamadas em "mbin0". Desse modo, mesmo tendo acesso ao conteúdo do arquivo original, ainda precisamos do código responsável por realizar a descompressão para que ele execute normalmente, pois caso o contrário o mesmo não terá as referências das DLLs chamadas.</p>
 
 <p>Para comprovar isso também podemos analisar alguns valores no cabeçalho opcional do arquivo comprimido, como o endereço e tamanho virtual do diretório de importações. Para facilitar a visualização e o processo, usei o CFF Explorer:</p>
 
@@ -127,7 +127,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>Como podemos ver, o diretório de importação tem o endereço A4E0 e tamanho 150, que somados ao ImageBase do arquivo (400000) resultam em um intervalo entre 40A4E0 e 40A630 - a região na seção .rsrc em que as DLLs são referenciadas.</p>
+<p>Como podemos ver, o diretório de importação tem o endereço 0xA4E0 e tamanho 150, que somados ao ImageBase do arquivo (0x400000) resultam em um intervalo entre 0x40A4E0 e 0x40A630 - a região na seção .rsrc em que as DLLs são referenciadas.</p>
 
 <p>Depois que todas as chamadas são feitas, temos finalmente um jump para a seção "mbin0", em que o arquivo vai executar o código original.</p>
 
@@ -157,33 +157,38 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 
 <p>Como podemos ver, a maioria dos imports foram identificados, com exceção de um com o nome "?" e com o endereço virtual em 0x31AC.</p>
 
-<p>Para entender o problema, fui procurar pelo seu conteúdo na região de memória da IAT e pude observar o momento em que os endereços das API de importação são incluídos na IAT, que ocorre no seguinte trecho de código:</p>
+<p>Para entender o problema, fui procurar pelo seu conteúdo na região de memória da IAT. </p>
+  
+  <pre class="post-code"><p>Em arquivos empacotados, a Import Address Table nem sempre está completa no arquivo em disco, pois parte das importações só é feita em tempo de execução. Ou seja, os endereços reais das APIs não serão definidos até que o algoritmo de desempacotamento (que na prática também é o código que prepara o ambiente do programa como um todo para que ele execute normalmente) termine de rodar.</p></pre>
+
+<p>Acompanhando a execução no debugger, foi possível observar exatamente o momento em que esses endereços começam a ser inseridos na IAT, preenchendo a tabela dinamicamente com os ponteiros as funções importadas:</p>
 
 <div class="post-image-wrap">
   <img src="../img/image12.png" alt="Imagem" width="800">
   
 </div>
 
-<p>Depois que todas a chamadas são feitas e a IAT está praticamente preenchida, é possível ver uma série de instruções envolvendo a API "MessageBoxA":</p>
+<p>Depois que todas a chamadas são feitas e a IAT está completa, é possível ver uma série de instruções envolvendo a API "<code>MessageBoxA</code>":</p>
 
 <div class="post-image-wrap">
   <img src="../img/image13.png" alt="Imagem" width="800">
   
 </div>
 
-<p>Podemos ver que o valor 0x68 - equivalente a instrução push - é passado para o endereço 409EE0, localizado na seção "mbin1".</p>
+<p>Podemos ver que o valor 0x68 - equivalente a instrução <code>PUSH</code> - é passado para o endereço 0x409EE0, localizado na seção "mbin1".</p>
 
-<p>Depois disso, o endereço de "MessageBox" é passado para o endereço 409EE1, complementando a instrução no push resultando em <code>push [MessageBoxA]</code>. E então, logo após essa instrução é adicionado 0xC3 que representa a instrução de retorno <code>ret</code>.</p>
+<p>Depois disso, o endereço da API "MessageBox" é passado para o endereço 0x409EE1, complementando a instrução no byte anterior e resultando em <code>push [MessageBoxA]</code>. E então, logo após essa instrução é adicionado 0xC3, que representa a instrução de retorno <code>RET</code>.</p>
 
 <div class="post-image-wrap">
   <img src="../img/image14.png" alt="Imagem" width="800">
   
 </div>
 
-<p>Por fim, vemos que o endereço 409EE0 agora contendo a instrução <code>push [MessageBoxA]</code> sobrescreve o valor do ponteiro que antes levava ao verdadeiro endereço da função MessageBoxA.</p>
+<p>Por fim, vemos que o endereço 0x409EE0 agora contendo a instrução <code>push [MessageBoxA]</code> sobrescreve o valor do ponteiro que antes levava ao verdadeiro endereço da função <code>MessageBoxA</code>.</p>
 
-<p>Dessa forma, podemos concluir que essa manipulação de endereços armazenados na IAT é a causa do problema, e agora que sabemos qual API a importação anteriormente desconhecida representa, podemos corrigir este erro voltando para a tela do Scylla e expandindo a DLL de nome "?" e clicando duas vezes na sua API. Assim, irá aparecer uma tela na qual podemos selecionar a API que de fato o programa deve chamar: MessageBoxA dentro de user32.dll.</p>
+<p>Dessa forma, podemos concluir que essa manipulação dos endereços armazenados na IAT é a causa do problema, pois o ponteiro que deveria levar diretamente ao endereço real da API <code>MessageBoxA</code> dentro da sua DLL correspondente foi alterado para apontar primeiro para uma região de memória intermediária. E, como o Scylla espera encontrar na IAT o endereço real da função importada, esse redirecionamento acaba impedindo que ele reconheça automaticamente qual API está sendo utilizada.</p>
 
+<p>Agora que já identificamos manualmente que aquela importação desconhecida corresponde à <code>MessageBoxA</code>, podemos corrigir isso voltando para a tela do Scylla, expandindo a DLL marcada como "?" e clicando duas vezes na API não identificada. Ao fazer isso, será aberta uma janela para selecionar manualmente a função correta, que nesse caso é <code>MessageBoxA</code> dentro de <code>user32.dll</code>.</p>
 <p>Depois disso, a lista de imports será automaticamente atualizada e podemos ver que agora todos eles foram reconhecidos:</p>
 
 <div class="post-image-wrap">
@@ -191,18 +196,18 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
   
 </div>
 
-<p>Agora que não temos mais nenhum problema de importação, podemos finalmente gerar nosso arquivo descompactado clicando em "Dump".</p>
+<p>Agora que não temos mais nenhum problema de importação, podemos finalmente gerar nosso arquivo descompactado na sua versão original clicando em "Dump".</p>
 
-<p>Porém, se tentarmos executar de im<code>EDI</code>ato o novo arquivo, iremos nos deparar com o seguinte erro:</p>
+<p>Porém, se tentarmos executar de imediato o novo arquivo, iremos nos deparar com o seguinte erro:</p>
 
 <div class="post-image-wrap">
   <img src="../img/image16.png" alt="Imagem" width="800">
   
 </div>
 
-<p>Neste caso, para resolver o problema basta clicar em "Fix Dump" no Scylla e selecionar o arquivo, e assim será criada uma cópia dele porém com uma seção a mais voltada para a sincronização das importações.</p>
+<p>Neste caso, para resolver o problema basta clicar em "Fix Dump" no Scylla e selecionar o arquivo, e assim será criada uma cópia dele porém com uma seção a mais voltada para contribuir na sincronização das importações.</p>
 
-<p>Agora, clicando no novo executável, podemos ver a mesma tela que aparece quando executamos sua versão compactada:</p>
+<p>Agora, clicando no novo executável, podemos ver a mesma tela que aparece quando executamos sua versão compactada, confirmando que ele está funcionando normalmente:</p>
 
 <div class="post-image-wrap">
   <img src="../img/image17.png" alt="Imagem" width="800">
@@ -211,6 +216,11 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 
 <p>E com isso, temos finalmente acesso ao programa original e desempacotado :)</p>
 
+ <h2 class="post-section">Referências</h2>
+        <ul>
+          <li>Revista de edição 15 da H2HC - <a href="https://github.com/h2hconference/H2HCMagazine/blob/master/RevistaH2HC_15.pdf">https://github.com/h2hconference/H2HCMagazine/blob/master/RevistaH2HC_15.pdf</a></li>
+          <li>Arquivo "unpackme1.exe" - <a href="https://github.com/h2hconference/H2HCMagazine/tree/master/15">https://github.com/h2hconference/H2HCMagazine/tree/master/15</a></li>
+        </ul>
       </div>
     </main>
   </div>
