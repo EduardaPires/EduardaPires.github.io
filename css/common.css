@@ -95,12 +95,12 @@ header {
   font-size: 15px;
 }
 
-.nav-right a {
+a {
   color: #8a8a8a;
   text-decoration: none;
 }
 
-.nav-right a:hover {
+a:hover {
     color: #50c96e;
 }
 
