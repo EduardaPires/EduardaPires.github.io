@@ -49,8 +49,8 @@
         </p>
 
         <div class="post-image-wrap">
-          <img src="../img/img10.png" alt="Nomes de seções na aba ASCII do editor hexadecimal" width="800" height="auto">
-          <p class="post-image-caption">Figura 10: Início dos cabeçalhos visualizados pelo nome na aba ASCII.</p>
+          <img src="../img/img11.png" alt="Nomes de seções na aba ASCII do editor hexadecimal" width="800" height="auto">
+          <p class="post-image-caption">Início dos cabeçalhos visualizados pelo nome na aba ASCII.</p>
         </div>
 
         <p>
@@ -58,8 +58,8 @@
         </p>
 
         <div class="post-image-wrap">
-          <img src="../img/img11.png" alt="PointerToRawData no CFF Explorer" width="800" height="auto">
-          <p class="post-image-caption">Figura 11: Campo PointerToRawData da seção .text.</p>
+          <img src="../img/img12.png" alt="PointerToRawData no CFF Explorer" width="800" height="auto">
+          <p class="post-image-caption">Campo PointerToRawData da seção .text.</p>
         </div>
 
         <p>
@@ -71,8 +71,8 @@
         </p>
 
         <div class="post-image-wrap">
-          <img src="../img/img12.png" alt="Espaço disponível em null bytes no editor" width="800" height="auto">
-          <p class="post-image-caption">Figura 12: Espaço de bytes nulos disponível para criação do nosso cabeçalho.</p>
+          <img src="../img/img13.png" alt="Espaço disponível em null bytes no editor" width="800" height="auto">
+          <p class="post-image-caption">Espaço de bytes nulos disponível para criação do nosso cabeçalho.</p>
         </div>
 
         <p>
@@ -83,8 +83,8 @@
         </p>
 
         <div class="post-image-wrap">
-          <img src="../img/img13.png" alt="Adição de null bytes no final do arquivo" width="800" height="auto">
-          <p class="post-image-caption">Figura 13: Adição de bytes nulos no final do binário.</p>
+          <img src="../img/img14.png" alt="Adição de null bytes no final do arquivo" width="800" height="auto">
+          <p class="post-image-caption">Adição de bytes nulos no final do binário.</p>
         </div>
 
         <p>
@@ -95,8 +95,8 @@
         </p>
 
         <div class="post-image-wrap">
-          <img src="../img/img14.png" alt="Cálculo do VirtualAddress da nova seção" width="800" height="auto">
-          <p class="post-image-caption">Figura 14: Verificando os valores da seção anterior para calcular o novo VirtualAddress.</p>
+          <img src="../img/img15.png" alt="Cálculo do VirtualAddress da nova seção" width="800" height="auto">
+          <p class="post-image-caption">Verificando os valores da seção anterior para calcular o novo VirtualAddress.</p>
         </div>
 
         <p>
@@ -107,10 +107,6 @@
         </p>
 
         <p>Com isso, temos todas as informações necessárias para construir o cabeçalho de seção:</p>
-
-        <div class="post-image-wrap">
-          <img src="../img/img15.png" alt="Tabela com informações para o novo cabeçalho" width="800" height="auto">
-        </div>
 
         <table style="width:100%; border-collapse: collapse; text-align: left; margin-bottom: 20px;">
           <tr style="border-bottom: 1px solid #ccc;">
@@ -159,11 +155,10 @@
 
         <p>Quanto ao restante dos campos, podemos deixar com o valor zero.</p>
         <p>Preenchendo devidamente a região do nosso cabeçalho de seção com essas informações, teremos a seguinte estrutura:</p>
-
         <div class="post-image-wrap">
-          <img src="../img/img16.png" alt="Novo cabeçalho preenchido no editor" width="800" height="auto">
-          <p class="post-image-caption">Figura 15: Edição hexadecimal do novo section header.</p>
+          <img src="../img/img16.png" alt="Informações para o novo cabeçalho" width="800" height="auto">
         </div>
+        
 
         <p>
           Após isso, também devemos modificar os valores do campo <code>NumberOfSections</code>, que originalmente era <code>0xA</code>, para <code>0xB</code> já que o programa terá uma seção a mais, e também temos que somar o valor original de <code>SizeOfImage</code> com <code>0x1000</code> (que antes era <code>0x001A5000</code> e passa a ser <code>0x001A6000</code>), que corresponde ao tamanho adicional que o arquivo vai ocupar na memória virtual. 
@@ -173,17 +168,17 @@
         </p>
 
         <p>Agora, verificando o arquivo modificado no <code>CFF Explorer</code>, vemos que a nova seção foi reconhecida com sucesso:</p>
-
+        
         <div class="post-image-wrap">
           <img src="../img/img17.png" alt="Nova seção .new no CFF Explorer" width="800" height="auto">
-          <p class="post-image-caption">Figura 16: Seção .new reconhecida validamente.</p>
+          <p class="post-image-caption">Seção .new reconhecida validamente.</p>
         </div>
 
         <p>E, para garantir que o arquivo continua funcionando normalmente, o executamos e verificamos que ele é executado da mesma forma que a sua versão original, nos mostrando a tela inicial do <code>putty.exe</code>:</p>
 
         <div class="post-image-wrap">
           <img src="../img/img18.png" alt="Putty original rodando com sucesso" width="800" height="auto">
-          <p class="post-image-caption">Figura 17: Putty executando mesmo após as alterações na estrutura PE.</p>
+          <p class="post-image-caption">Putty executando mesmo após as alterações na estrutura PE.</p>
         </div>
 
         <h2 class="post-section">Adicionando um algoritmo de desofuscação na nova seção</h2>
@@ -196,7 +191,7 @@
 
         <div class="post-image-wrap">
           <img src="../img/img19.png" alt="Valor atual de DllCharacteristics" width="800" height="auto">
-          <p class="post-image-caption">Figura 18: Campo DllCharacteristics indicando ASLR ativo.</p>
+          <p class="post-image-caption">Campo DllCharacteristics indicando ASLR ativo.</p>
         </div>
 
         <p>
@@ -209,7 +204,7 @@
 
         <div class="post-image-wrap">
           <img src="../img/img20.png" alt="Alteração do Entry Point" width="800" height="auto">
-          <p class="post-image-caption">Figura 19: Mudando o AddressOfEntryPoint para apontar para a nova seção.</p>
+          <p class="post-image-caption">Mudando o AddressOfEntryPoint para apontar para a nova seção.</p>
         </div>
 
         <p>
@@ -222,10 +217,6 @@
           Agora, vamos criar uma versão do nosso arquivo que estaticamente já tenha todos os dados na seção <code>.text</code> codificados, para que eles sejam decodificados apenas em tempo de execução pela seção <code>.new</code>.
         </p>
         <p>Para isso utilizei o seguinte script em <code>Python</code>:</p>
-
-        <div class="post-image-wrap">
-          <img src="../img/img21.png" alt="Script em Python para empacotamento" width="800" height="auto">
-        </div>
 
 <pre class="post-code">def empacotamento(arquivo, raw_address, raw_size, chave=0x2A):
     try:
@@ -253,38 +244,39 @@ empacotamento(arquivo, raw_address, raw_size)</pre>
         </p>
 
         <div class="post-image-wrap">
+          <img src="../img/img21.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
+          <p class="post-image-caption">Arquivos comparados no HxD demonstrando a ofuscação aplicada à seção .text.</p>
+        </div>
+        <div class="post-image-wrap">
           <img src="../img/img22.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
-          <p class="post-image-caption">Figura 20: Arquivos comparados no HxD demonstrando a ofuscação aplicada à seção .text.</p>
+          <p class="post-image-caption">Arquivos comparados no HxD demonstrando a ofuscação aplicada à seção .text.</p>
         </div>
 
         <p>Também podemos ver, ao inserir os arquivos no <code>x64dbg</code> por exemplo, que na versão modificada não é mais possível identificar as strings do arquivo:</p>
 
         <div class="post-image-wrap">
           <img src="../img/img23.png" alt="Falta de strings no x64dbg (versão empacotada)" width="800" height="auto">
-          <p class="post-image-caption">Figura 21: Strings ofuscadas no debugger (versão empacotada).</p>
+          <p class="post-image-caption">Strings ofuscadas no debugger (versão empacotada).</p>
         </div>
 
         <p>Enquanto que no arquivo original tínhamos a seguinte visualização:</p>
 
         <div class="post-image-wrap">
           <img src="../img/img24.png" alt="Strings visíveis no x64dbg (versão original)" width="800" height="auto">
-          <p class="post-image-caption">Figura 22: Strings perfeitamente visíveis no arquivo original.</p>
+          <p class="post-image-caption">Strings perfeitamente visíveis no arquivo original.</p>
         </div>
 
         <p>Agora, para criar o nosso código de decodificação da seção <code>.text</code>, precisamos do seu <code>VirtualAddress</code> e <code>VirtualSize</code>:</p>
 
         <div class="post-image-wrap">
           <img src="../img/img25.png" alt="Valores de VirtualAddress e VirtualSize para uso no Assembly" width="800" height="auto">
-          <p class="post-image-caption">Figura 23: Coletando VirtualAddress e VirtualSize.</p>
+          <p class="post-image-caption">Coletando VirtualAddress e VirtualSize.</p>
         </div>
 
         <p>E considerando que ao executar na memória seu endereço virtual será somado ao <code>ImageBase</code>, temos que o ponto de início da <code>.text</code> será no endereço <code>0x140001000</code> (ImageBase + seu VirtualAddress).</p>
 
         <p>Com essas informações, podemos aplicar o seguinte código em Assembly:</p>
 
-        <div class="post-image-wrap">
-          <img src="../img/img26.png" alt="Código Assembly de decodificação" width="800" height="auto">
-        </div>
 
 <pre class="post-code">PUSH RAX  ;salvamos os valores dos registradores que vamos usar na pilha pra que possam ser recuperados depois
 PUSH RCX  
@@ -311,8 +303,8 @@ JMP 1400BE504 ;salta para o OEP (original entrypoint)</pre>
         </p>
 
         <div class="post-image-wrap">
-          <img src="../img/img27.png" alt="Modificando as instruções via x64dbg" width="800" height="auto">
-          <p class="post-image-caption">Figura 24: Inserindo o loop de decodificação via x64dbg.</p>
+          <img src="../img/img26.png" alt="Modificando as instruções via x64dbg" width="800" height="auto">
+          <p class="post-image-caption">Inserindo o loop de decodificação via x64dbg.</p>
         </div>
 
         <p>Para salvar as mudanças aplicadas em um novo arquivo, basta clicarmos com o botão direito, irmos em Patches e clicar em “Patch File”.</p>
@@ -320,20 +312,20 @@ JMP 1400BE504 ;salta para o OEP (original entrypoint)</pre>
         <p>E por fim, para confirmar se o desempacotamento está funcionando, executamos o nosso novo arquivo e sabemos que está tudo certo porque nos deparamos novamente com a tela inicial do <code>putty.exe</code>:</p>
 
         <div class="post-image-wrap">
-          <img src="../img/img28.png" alt="Putty funcionando novamente após o pack" width="800" height="auto">
-          <p class="post-image-caption">Figura 25: Executável modificado carregando com sucesso em runtime.</p>
+          <img src="../img/img27.png" alt="Putty funcionando novamente após o pack" width="800" height="auto">
+          <p class="post-image-caption">Executável modificado carregando com sucesso em runtime.</p>
         </div>
 
         <p>Mas ainda assim, se tentarmos inserir o arquivo em qualquer ferramenta de análise estática, não iremos obter quaisquer informações sobre seu código, já que o mesmo permanecerá ofuscado enquanto não for executado e passar pelo nosso algoritmo de decodificação na seção <code>.new</code>.</p>
 
         <p>No <code>putty.exe</code> original: </p>
         <div class="post-image-wrap">
-          <img src="../img/img29.png" alt="Análise estática no arquivo original" width="800" height="auto">
+          <img src="../img/img28.png" alt="Análise estática no arquivo original" width="800" height="auto">
         </div>
 
         <p>No nosso <code>putty.exe</code> empacotado:</p>
         <div class="post-image-wrap">
-          <img src="../img/img30.png" alt="Análise estática no arquivo empacotado" width="800" height="auto">
+          <img src="../img/img29.png" alt="Análise estática no arquivo empacotado" width="800" height="auto">
         </div>
 
         <p>
