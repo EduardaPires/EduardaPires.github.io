@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Aprendendo a inserir manualmente uma seção de desempacotamento - Formato PE pt.2 - 0xED04RD4's blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/post.css">
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="logo">
+        <div class="logo-main">0xED04RD4's blog <span class="cursor"></span></div>
+        <div class="logo-sub">malware analysis • reversing • low level</div>
+      </div>
+      <div class="nav-right">
+        <a href="../index.html">home</a>
+        <a href="../whoami.html">whoami</a>
+        <a href="../blogs.html">posts</a>
+      </div>
+    </header>
+
+    <main class="post-content-area">
+      <div class="post-header">
+        <h1 class="post-title">Aprendendo a inserir manualmente uma seção de desempacotamento - Formato PE pt.2</h1>
+        <time class="post-date" datetime="2026-03-01">1 de março de 2026</time>
+      </div>
+
+      <div class="post-body">
+
+ <h1 class="post-title">Aprendendo a inserir manualmente uma seção de desempacotamento - Formato PE pt.2</h1>
+
+        <p>
+          Agora, para reforçar os conceitos vistos na primeira parte desse post (Entendo a estrutura de um executável), podemos partir para o desafio de tentar inserir uma nova seção em um arquivo <code>PE</code>.
+        </p>
+        <p>
+          Nesse exemplo, decidi usar o programa <code>putty.exe</code> (disponível para download em <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html" target="_blank">chiark.greenend.org.uk</a>), que se trata de um executável amplamente utilizado para conexões remotas com outros dispositivos. O escolhi por ser um programa mais leve e simples, apenas para acelerar o processo de mapear e manipular sua estrutura, mas esse exercício pode ser replicado com o arquivo <code>PE</code> que desejar. Além disso, o mapeamento da estrutura do arquivo será feito usando a ferramenta <code>CFF Explorer</code> (<a href="https://ntcore.com/explorer-suite/" target="_blank">ntcore.com/explorer-suite</a>) que tem a funcionalidade de identificar automaticamente os campos dos binários. Contudo, a modificação desses campos será feita de forma manual para uma maior fixação do conteúdo.
+        </p>
+
+        <p>
+          Para começar, precisamos mapear determinados campos do arquivo que devem ser modificados não só para contribuir na inserção de uma nova seção como também para garantir que o arquivo continue sendo reconhecido como um <code>PE</code> válido. 
+        </p>
+        <p>
+          Antes de tudo, porém, também precisamos verificar se no arquivo temos pelo menos um espaço de 40 bytes nulos entre o último cabeçalho de seção e a primeira seção, para assim adicionarmos mais um cabeçalho referente a seção que queremos criar. 
+        </p>
+        <p>
+          De forma visual podemos identificar isso no próprio <code>wxHexEditor</code>, considerando que vemos o início dos cabeçalhos de seção a partir dos nomes de seções que ficam visíveis da aba de ASCII:
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img10.png" alt="Nomes de seções na aba ASCII do editor hexadecimal" width="800" height="auto">
+          <p class="post-image-caption">Figura 10: Início dos cabeçalhos visualizados pelo nome na aba ASCII.</p>
+        </div>
+
+        <p>
+          Por meio do nome que sempre indica o começo do cabeçalho de seção e sabendo que todos têm tamanho de 40 bytes, basta verificarmos no <code>CFF Explorer</code> o offset que corresponde ao início do conteúdo da primeira seção, que será a <code>.text</code> e está armazenado no campo <code>PointerToRawData</code> (ou, como é mostrado abaixo, pode ser chamado apenas de Raw Data):
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img11.png" alt="PointerToRawData no CFF Explorer" width="800" height="auto">
+          <p class="post-image-caption">Figura 11: Campo PointerToRawData da seção .text.</p>
+        </div>
+
+        <p>
+          Como podemos ver, temos os valores destacados em azul que correspondem ao valor propriamente dito dos campos, e os valores na primeira linha que correspondem à localização (offset) desses campos. E assim podemos verificar que offset em que a seção <code>.text</code> começa é <code>0x400</code>.
+        </p>
+
+        <p>
+          Voltando para o editor, podemos então calcular o espaço disponível, que vai do offset <code>0x310</code> até o <code>0x3F0</code> (resultando em um tamanho de <code>0xE0</code>), sendo mais do que o suficiente para criarmos nossa seção:
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img12.png" alt="Espaço disponível em null bytes no editor" width="800" height="auto">
+          <p class="post-image-caption">Figura 12: Espaço de bytes nulos disponível para criação do nosso cabeçalho.</p>
+        </div>
+
+        <p>
+          Com isso, vamos então mapear e modificar as informações necessárias para garantir que o arquivo <code>PE</code> continue válido. Um exemplo seria o campo com o valor do tamanho do arquivo, que deverá aumentar já que vamos adicionar o conteúdo da nossa seção no final dele. Além disso, também devemos nos atentar ao alinhamento do arquivo definido em <code>FileAlignment</code> para garantir que o <code>PointerToRawData</code> seja múltiplo desse valor. 
+        </p>
+        <p>
+          No <code>CFF Explorer</code> podemos ver que o <code>FileAlignment</code> tem valor <code>0x200</code>. Para garantir que o alinhamento seja mantido, irei adicionar <code>0x200</code> bytes nulos (ou 512 bytes, na base decimal) no final do nosso arquivo. Apesar de ser possível inserir o conteúdo da nova seção em qualquer endereço após o final da última seção (contanto que ele esteja em um alinhamento diferente), optei por inserir o conteúdo da nova seção a partir apenas de bytes nulos, para evitar sobrescrever outros dados do programa. Abaixo é possível ver esses <code>0x200</code> bytes adicionados, que vão do offset <code>0x1A1668</code> até o <code>0x1A1867</code>:
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img13.png" alt="Adição de null bytes no final do arquivo" width="800" height="auto">
+          <p class="post-image-caption">Figura 13: Adição de bytes nulos no final do binário.</p>
+        </div>
+
+        <p>
+          A partir disso, podemos definir o endereço da nossa seção no disco (<code>PointerToRawData</code>) como sendo o offset dos dados adicionados (<code>0x1A1668</code>) arredondado para cima, de acordo com o valor de <code>FileAlignment</code>, novamente para garantir o alinhamento no disco. Obtemos assim o endereço físico <code>0x1A1800</code> para nossa nova seção. Porém, como também precisamos ter <code>0x200</code> bytes a partir desse endereço, farei novamente a adição dessa quantidade de bytes, adicionando no final um total de <code>0x400</code> bytes (ou 1024 em base decimal). Dessa forma, obtemos o espaço completo para nossa seção, com tamanho de <code>0x200</code> bytes e que vai do endereço <code>0x1A1800</code> ao <code>0x1A19FF</code>.
+        </p>
+        <p>
+          Depois disso, devemos calcular o endereço virtual que nossa seção vai ter, a partir da soma do endereço virtual da seção anterior com o seu tamanho virtual.
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img14.png" alt="Cálculo do VirtualAddress da nova seção" width="800" height="auto">
+          <p class="post-image-caption">Figura 14: Verificando os valores da seção anterior para calcular o novo VirtualAddress.</p>
+        </div>
+
+        <p>
+          Com a imagem acima verificamos o valor do endereço e tamanho virtual, respectivamente, da última seção. Assim calculamos que o endereço virtual da nossa seção será a soma dos dois valores, resultando em <code>0x1A41B8</code>. E, ao verificar no <code>CFF Explorer</code> que o alinhamento da seção tem o valor de <code>0x1000</code>, chegamos no valor arredondado <code>0x1A5000</code> para o endereço virtual da nossa seção.
+        </p>
+        <p>
+          Por fim, iremos definir o valor das características da nossa seção como <code>0xE00000E0</code>, para que ela tenha permissões de escrita, leitura e execução.
+        </p>
+
+        <p>Com isso, temos todas as informações necessárias para construir o cabeçalho de seção:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img15.png" alt="Tabela com informações para o novo cabeçalho" width="800" height="auto">
+        </div>
+
+        <table style="width:100%; border-collapse: collapse; text-align: left; margin-bottom: 20px;">
+          <tr style="border-bottom: 1px solid #ccc;">
+            <th style="padding: 8px;">Campo</th>
+            <th style="padding: 8px;">Valor Original</th>
+            <th style="padding: 8px;">Tamanho</th>
+            <th style="padding: 8px;">Bytes (Little Endian / Hex)</th>
+          </tr>
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 8px;">Nome</td>
+            <td style="padding: 8px;"><code>.new</code></td>
+            <td style="padding: 8px;">8 bytes</td>
+            <td style="padding: 8px;"><code>2E 6E 65 77 00 00 00 00</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 8px;">VirtualSize</td>
+            <td style="padding: 8px;"><code>0x1000</code></td>
+            <td style="padding: 8px;">4 bytes</td>
+            <td style="padding: 8px;"><code>00 10 00 00</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 8px;">VirtualAddress</td>
+            <td style="padding: 8px;"><code>0x1A5000</code></td>
+            <td style="padding: 8px;">4 bytes</td>
+            <td style="padding: 8px;"><code>00 50 1A 00</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 8px;">SizeOfRawData</td>
+            <td style="padding: 8px;"><code>0x200</code></td>
+            <td style="padding: 8px;">4 bytes</td>
+            <td style="padding: 8px;"><code>00 02 00 00</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 8px;">PointerToRawData</td>
+            <td style="padding: 8px;"><code>0x1A1800</code></td>
+            <td style="padding: 8px;">4 bytes</td>
+            <td style="padding: 8px;"><code>00 18 1A 00</code></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;">Characteristics</td>
+            <td style="padding: 8px;"><code>0xE00000E0</code></td>
+            <td style="padding: 8px;">4 bytes</td>
+            <td style="padding: 8px;"><code>E0 00 00 E0</code></td>
+          </tr>
+        </table>
+
+        <p>Quanto ao restante dos campos, podemos deixar com o valor zero.</p>
+        <p>Preenchendo devidamente a região do nosso cabeçalho de seção com essas informações, teremos a seguinte estrutura:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img16.png" alt="Novo cabeçalho preenchido no editor" width="800" height="auto">
+          <p class="post-image-caption">Figura 15: Edição hexadecimal do novo section header.</p>
+        </div>
+
+        <p>
+          Após isso, também devemos modificar os valores do campo <code>NumberOfSections</code>, que originalmente era <code>0xA</code>, para <code>0xB</code> já que o programa terá uma seção a mais, e também temos que somar o valor original de <code>SizeOfImage</code> com <code>0x1000</code> (que antes era <code>0x001A5000</code> e passa a ser <code>0x001A6000</code>), que corresponde ao tamanho adicional que o arquivo vai ocupar na memória virtual. 
+        </p>
+        <p>
+          Fazemos isso pois, mesmo que no disco tenham sido adicionados apenas <code>0x400</code> bytes, ao criarmos uma nova seção precisamos reservar para ela um novo bloco de alinhamento inteiro na memória virtual. Na prática, basta somarmos o <code>SizeOfImage</code> anterior com o valor do <code>SectionAlignment</code>(com o valor <code>0x1000</code>), pois os <code>0x400</code> bytes cabem dentro desse único bloco de <code>0x1000</code>. Porém, no caso de dados que sejam maiores que o alinhamento (como <code>0x1200</code> bytes), seria preciso reservar dois blocos (<code>0x2000</code>) para que o novo valor de <code>SizeOfImage</code> seja proporcional a essa ocupação.
+        </p>
+
+        <p>Agora, verificando o arquivo modificado no <code>CFF Explorer</code>, vemos que a nova seção foi reconhecida com sucesso:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img17.png" alt="Nova seção .new no CFF Explorer" width="800" height="auto">
+          <p class="post-image-caption">Figura 16: Seção .new reconhecida validamente.</p>
+        </div>
+
+        <p>E, para garantir que o arquivo continua funcionando normalmente, o executamos e verificamos que ele é executado da mesma forma que a sua versão original, nos mostrando a tela inicial do <code>putty.exe</code>:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img18.png" alt="Putty original rodando com sucesso" width="800" height="auto">
+          <p class="post-image-caption">Figura 17: Putty executando mesmo após as alterações na estrutura PE.</p>
+        </div>
+
+        <h2 class="post-section">Adicionando um algoritmo de desofuscação na nova seção</h2>
+        <p>
+          Agora, trazendo essa prática para uma situação em que ela possa ser aplicada e tenha utilidade em um cenário real, vamos fazer com que nossa seção atue como um desempacotador que seja responsável por pegar o conteúdo do nosso arquivo depois de passar por um processo de codificação e realize a sua decodificação em tempo de execução, exatamente como um arquivo “packeado” funcionaria.
+        </p>
+        <p>
+          Antes de tudo, porém, devemos alterar as características do arquivo para que ele não utilize o método <code>ASLR</code>, responsável por randomizar os endereços do programa toda vez que o mesmo é carregado. Mais especificamente, isso é definido no campo <code>DllCharacteristics</code>, que no momento possui o valor <code>0x8160</code>:
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img19.png" alt="Valor atual de DllCharacteristics" width="800" height="auto">
+          <p class="post-image-caption">Figura 18: Campo DllCharacteristics indicando ASLR ativo.</p>
+        </div>
+
+        <p>
+          A partir da documentação da microsoft (<a href="https://learn.microsoft.com/pt-br/windows/win32/debug/pe-format#dll-characteristics" target="_blank">link</a>) podemos identificar os valores responsáveis pela atribuição de cada característica, que no caso do <code>ASLR</code> corresponde ao valor <code>0x40</code> (DYNAMIC_BASE). Desse modo, basta subtrairmos esse valor de <code>DllCharacteristics</code> para que essa característica seja “desativada”, substituindo assim o valor <code>0x8160</code> por <code>0x8120</code>.
+        </p>
+
+        <p>
+          Para começar, precisamos alterar o fluxo do nosso arquivo para que a nova seção <code>.new</code> seja executada antes da seção <code>.text</code>, por meio da alteração do endereço no campo <code>AddressOfEntryPoint</code> para o <code>VirtualAddress</code> da seção <code>.new</code>, que é <code>0x1A5000</code>. 
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img20.png" alt="Alteração do Entry Point" width="800" height="auto">
+          <p class="post-image-caption">Figura 19: Mudando o AddressOfEntryPoint para apontar para a nova seção.</p>
+        </div>
+
+        <p>
+          É importante porém que guardemos o valor do entrypoint anterior, que corresponde ao endereço virtual <code>0xBE504</code>, para que possamos voltar para o fluxo original do programa depois de <code>.new</code> finalizar sua execução.
+        </p>
+        <p>
+          Além disso, devemos alterar as características em <code>.text</code>, que atualmente tem o valor <code>0x60000020</code> e indica apenas que a seção pode ser lida e executada, mas não modificada, para <code>0xE00000E0</code> que concede permissão de escrita e outras características.
+        </p>
+        <p>
+          Agora, vamos criar uma versão do nosso arquivo que estaticamente já tenha todos os dados na seção <code>.text</code> codificados, para que eles sejam decodificados apenas em tempo de execução pela seção <code>.new</code>.
+        </p>
+        <p>Para isso utilizei o seguinte script em <code>Python</code>:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img21.png" alt="Script em Python para empacotamento" width="800" height="auto">
+        </div>
+
+<pre class="post-code">def empacotamento(arquivo, raw_address, raw_size, chave=0x2A):
+    try:
+        with open(arquivo, 'rb+') as f:
+            f.seek(raw_address) #pega o conteudo do arquivo a partir do endereco da .text no disco (raw_address)
+            section_data = bytearray(f.read(raw_size)) #define todo o conteudo de .text ao somar seu endereco (raw_address) com seu tamanho no disco (raw_size)
+
+            for i in range(len(section_data)):
+                section_data[i] ^= chave #realiza a operacao XOR byte a byte da secao com a chave definida
+            
+            f.seek(raw_address)
+            f.write(section_data) #sobrescreve o conteudo novo a partir da posicao de raw_address
+        print("Empacotamento realizado com sucesso!")       
+    except Exception as e:
+        print(f"Erro: {e}")
+
+arquivo = "puttymodificado.exe"
+raw_address = 0x00000400 
+raw_size = 0x000EBE00
+
+empacotamento(arquivo, raw_address, raw_size)</pre>
+
+        <p>
+          E, após sua execução, podemos comparar em um editor qualquer como o <code>HxD</code> o arquivo codificado "puttymodificado.exe" com o <code>putty.exe</code> original e observar que a operação XOR foi realizada em toda a seção, desde o primeiro byte (offset <code>0x400</code>) de <code>.text</code> até o último (offset <code>0xEC1FF</code>):
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img22.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
+          <p class="post-image-caption">Figura 20: Arquivos comparados no HxD demonstrando a ofuscação aplicada à seção .text.</p>
+        </div>
+
+        <p>Também podemos ver, ao inserir os arquivos no <code>x64dbg</code> por exemplo, que na versão modificada não é mais possível identificar as strings do arquivo:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img23.png" alt="Falta de strings no x64dbg (versão empacotada)" width="800" height="auto">
+          <p class="post-image-caption">Figura 21: Strings ofuscadas no debugger (versão empacotada).</p>
+        </div>
+
+        <p>Enquanto que no arquivo original tínhamos a seguinte visualização:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img24.png" alt="Strings visíveis no x64dbg (versão original)" width="800" height="auto">
+          <p class="post-image-caption">Figura 22: Strings perfeitamente visíveis no arquivo original.</p>
+        </div>
+
+        <p>Agora, para criar o nosso código de decodificação da seção <code>.text</code>, precisamos do seu <code>VirtualAddress</code> e <code>VirtualSize</code>:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img25.png" alt="Valores de VirtualAddress e VirtualSize para uso no Assembly" width="800" height="auto">
+          <p class="post-image-caption">Figura 23: Coletando VirtualAddress e VirtualSize.</p>
+        </div>
+
+        <p>E considerando que ao executar na memória seu endereço virtual será somado ao <code>ImageBase</code>, temos que o ponto de início da <code>.text</code> será no endereço <code>0x140001000</code> (ImageBase + seu VirtualAddress).</p>
+
+        <p>Com essas informações, podemos aplicar o seguinte código em Assembly:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img26.png" alt="Código Assembly de decodificação" width="800" height="auto">
+        </div>
+
+<pre class="post-code">PUSH RAX  ;salvamos os valores dos registradores que vamos usar na pilha pra que possam ser recuperados depois
+PUSH RCX  
+PUSH RDI  
+
+MOV RAX, 140001000 ;virtualaddress de .text
+MOV EDI, EBC26 ;virtualsize de .text
+MOV ECX, 0 ;contador do loop e posicao do byte em .text
+
+DECODE:
+XOR byte ptr ds:[RAX+RCX], 0x2A  ;xor pra reverter codificacao
+ADD ECX, 1 ;incremento do contador/indice
+CMP ECX, EDI ;verifica se ja chegou no ultimo byte de .text
+JL DECODE ;se ecx ainda e menor, faz o loop
+
+POP RDI   
+POP RCX   
+POP RAX   
+
+JMP 1400BE504 ;salta para o OEP (original entrypoint)</pre>
+
+        <p>
+          Com o código pronto, podemos adicionar ele no espaço da seção <code>.new</code> usando o <code>x64dbg</code>, que possui a funcionalidade de inserir e modificar instruções clicando na tecla de espaço. Assim, quando chegarmos exatamente no endereço correspondente a primeira instrução de <code>.new</code>, podemos inserir linha por linha nossas instruções. Lembrando apenas que, ao referenciar números hexadecimais, devemos colocar “0x” na frente, e que a instrução DECODE na realidade é apenas um label que não tem de fato uma lógica, portanto em JL DECODE devemos na verdade substituir “DECODE” pelo endereço exato do início do loop, que contém a instrução “XOR [EAX+ECX], 2A”.
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img27.png" alt="Modificando as instruções via x64dbg" width="800" height="auto">
+          <p class="post-image-caption">Figura 24: Inserindo o loop de decodificação via x64dbg.</p>
+        </div>
+
+        <p>Para salvar as mudanças aplicadas em um novo arquivo, basta clicarmos com o botão direito, irmos em Patches e clicar em “Patch File”.</p>
+
+        <p>E por fim, para confirmar se o desempacotamento está funcionando, executamos o nosso novo arquivo e sabemos que está tudo certo porque nos deparamos novamente com a tela inicial do <code>putty.exe</code>:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img28.png" alt="Putty funcionando novamente após o pack" width="800" height="auto">
+          <p class="post-image-caption">Figura 25: Executável modificado carregando com sucesso em runtime.</p>
+        </div>
+
+        <p>Mas ainda assim, se tentarmos inserir o arquivo em qualquer ferramenta de análise estática, não iremos obter quaisquer informações sobre seu código, já que o mesmo permanecerá ofuscado enquanto não for executado e passar pelo nosso algoritmo de decodificação na seção <code>.new</code>.</p>
+
+        <p>No <code>putty.exe</code> original: </p>
+        <div class="post-image-wrap">
+          <img src="../img/img29.png" alt="Análise estática no arquivo original" width="800" height="auto">
+        </div>
+
+        <p>No nosso <code>putty.exe</code> empacotado:</p>
+        <div class="post-image-wrap">
+          <img src="../img/img30.png" alt="Análise estática no arquivo empacotado" width="800" height="auto">
+        </div>
+
+        <p>
+          Isso sem falar nas <code>strings</code>, que como já foi demonstrado não ficam visíveis, e diversas outras informações que no disco ficam indisponíveis.
+        </p>
+        <p>
+          É óbvio que, rodando o programa em um debugger e o analisando de forma dinâmica, o código original será facilmente extraído, já que o algoritmo de decodificação está localizado logo no entrypoint do programa e está bastante enxuto e simples de se compreender. Sendo assim, podemos evitar que isso ocorra ao inserir códigos anteriores apenas para distrair o analista, ou separar o algoritmo em diversos segmentos acessados por saltos de forma que ele não esteja localizado em um único lugar. Enfim, as possibilidades são inúmeras, e cabe a você decidir o que fazer com isso daqui pra frente.
+        </p>
+        <p>
+          Dito isso, espero de verdade que esse post tenha sido útil de alguma forma. Apesar de ter sido bem trabalhoso, também adorei escrevê-lo e relembrar conceitos da estrutura <code>PE</code>, que sempre achei tão interessante.
+        </p>
+        <p>
+          Caso tenha qualquer dúvida ou feedback, pode se sentir à vontade em me chamar no meu linkedin.
+        </p>
+        <p>
+          E por enquanto é só, até a próxima :)
+        </p>
+
+        <h2 class="post-section">Links e Referências</h2>
+        <ul>
+          <li>Para a explicação apropriada de diversos conceitos abordados neste post usei como referencias o site oficial da Microsoft (<a href="https://learn.microsoft.com/en-us/windows/win32/debug/pe-format" target="_blank">link</a>).</li>
+          <li>Também o livro Fundamentos da Engenharia Reversa do Mente Binária (<a href="https://mentebinaria.gitbook.io/engenharia-reversa/05-o-formato-pe" target="_blank">link</a>).</li>
+          <li>Link para baixar o putty.exe modificado*</li>
+        </ul>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
