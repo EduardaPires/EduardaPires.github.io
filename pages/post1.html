@@ -253,23 +253,22 @@
           No disco por sua vez, cada seção deve ficar em um bloco de tamanho definido no campo <code>FileAlignment</code>, e vai começar no offset com o mesmo valor do campo <code>PointerToRawData</code> além de ter o tamanho especificado em <code>SizeOfRawData</code>. Já quando o arquivo for mapeado no disco, o tamanho das seções será o <code>VirtualSize</code> e todos os endereços se tornam endereços virtuais, de forma que estarão sempre relativos ao <code>ImageBase</code> e assim o início da seção ficará na posição do seu <code>VirtualAddress</code> + o <code>ImageBase</code> do arquivo.
         </p><br>
 
-        <p>Abaixo está um fluxograma bem mais detalhado e com exemplos dessas estruturas:</p><br>
-
-        <div class="post-image-wrap">
-          <img src="../img/img10.png" alt="Fluxograma da estrutura PE" width="800" height="auto">
-          <p class="post-image-caption">Corkami).</p><br>
-        </div>
-
-        <p>
-          Fonte: <a href="https://github.com/corkami/pics/blob/master/binary/PE.png" target="_blank">https://github.com/corkami/pics/blob/master/binary/PE.png</a>
-        </p><br>
+        
 
         <br>
         <hr>
         <br>
+<p>Abaixo está um fluxograma bem mais detalhado e com exemplos dessas estruturas:</p><br>
 
+ <div class="post-image-wrap">
+ <img src="../img/img10.png" alt="Fluxograma da estrutura PE" width="800" height="auto">
+<p class="post-image-caption">Fonte: <a href="https://github.com/corkami/pics/blob/master/binary/PE.png" target="_blank">https://github.com/corkami/pics/blob/master/binary/PE.png</a></p>
+        </div>
+          <br>
         <p>Na continuação deste post (<a href="post2.html" target="_blank">Aprendendo a inserir manualmente uma seção de desempacotamento</a>) irei demonstrar como esses conhecimentos podem ser úteis na prática, por meio da inserção de uma nova seção em um executável contendo um algoritmo de desempacotamento em tempo de execução.
-</p><br>
+</p><br><br>
+        <hr>
+        <br>
  <h2 class="post-section">Links e Referências</h2>
         <ul>
           <li>Para a explicação apropriada de diversos conceitos abordados neste post usei como referencias o site oficial da Microsoft (<a href="https://learn.microsoft.com/en-us/windows/win32/debug/pe-format" target="_blank">link</a>).</li>
