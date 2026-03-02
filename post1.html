@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Entendendo a estrutura de um executável - Formato PE pt.1 - 0xED04RD4's blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/post.css">
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="logo">
+        <div class="logo-main">0xED04RD4's blog <span class="cursor"></span></div>
+        <div class="logo-sub">malware analysis • reversing • low level</div>
+      </div>
+      <div class="nav-right">
+        <a href="../index.html">home</a>
+        <a href="../whoami.html">whoami</a>
+        <a href="../blogs.html">posts</a>
+      </div>
+    </header>
+
+    <main class="post-content-area">
+      <div class="post-header">
+        <h1 class="post-title">Entendendo a estrutura de um executável - Formato PE pt.1</h1>
+        <time class="post-date" datetime="2026-03-01">1 de março de 2026</time>
+      </div>
+
+      <div class="post-body">
+        <p>
+          Inicialmente, ou até mesmo bem depois do início, arquivos binários podem ser bastante intimidadores. Pelo menos no meu caso, na primeira vez que coloquei um executável em um editor hexadecimal, fiquei me perguntando como que um ser humano era capaz de entender alguma coisa ou, ao menos, perceber algum padrão em meio a toda aquela sequência aparentemente aleatória de bytes.
+        </p>
+        <p>
+          E de fato, como já se sabe, arquivos binários foram feitos para serem lidos e compreendidos por máquinas, não humanos. Por isso, ficar perdido é algo esperado, já que estamos habituados a entender um programa por meio da análise do seu código-fonte, escrito geralmente em uma linguagem de alto nível e de fácil compreensão, como <code>Python</code>. O problema surge, porém, quando por algum motivo nós não temos acesso a esse código-fonte, mas ainda assim queremos entender a natureza desse arquivo e até mesmo modificá-lo. Nessa situação, saber analisar executáveis se torna bastante útil, tanto de forma estática quanto dinâmica.
+        </p>
+        <p>
+          Falando de análise estática em específico, como o próprio nome diz, ela se trata da análise de programas sem a necessidade de executá-los. Ela é bastante usada na fase inicial de análise de binários, quando queremos extrair informações que são inerentes ao arquivo (ou seja, que já estão presentes nele antes mesmo da execução) como o compilador usado, suas <code>strings</code>, as <code>APIs</code> importadas e exportadas, suas <code>hashes</code>, assinaturas, mapa de memória, tamanho e muito mais. Todas essas informações podem ser obtidas de forma automatizada por meio de ferramentas como <code>DIE</code>, <code>CFF Explorer</code> e <code>Pestudio</code>; porém, acredito que também é importante sabermos realizar esse mapeamento sem depender de ferramentas, para assim compreender de forma mais profunda como os binários são estruturados e chegar a conclusão de que aquela sequência de bytes que inicialmente parecia não fazer o menor sentido na realidade tem toda uma lógica por trás, na qual nada é por acaso e cada coisinha tem seu devido propósito.
+        </p>
+        <p>
+          Dito isso, esse blogpost tem como objetivo orientar aqueles que têm interesse em entender de forma geral como arquivos executáveis, mais especificamente arquivos <code>PE</code> do Windows, são estruturados. Espero muito que consiga ajudar pelo menos um pouco e, caso tenha alguma dúvida, crítica, comentário ou correção a relatar, pode se sentir à vontade para entrar em contato comigo :)
+        </p>
+
+        <h2 class="post-section">O que são binários?</h2>
+        <p>
+          Binários são nada mais do que uma sequência de bytes que, para serem interpretados pelo computador, devem seguir de forma exata a estrutura definida para o seu tipo de arquivo que vai variar de acordo com o sistema operacional. No caso dos arquivos executáveis do Linux, eles seguem a estrutura de formato <code>ELF</code>, enquanto no Windows eles seguem a estrutura <code>PE</code>, que será o foco deste post. A estrutura <code>PE</code> define exatamente onde um determinado campo termina e outro começa, e por meio disso, os diferentes valores que estiverem presentes nesses campos irão definir todas as características e funcionamento do arquivo executável.
+        </p>
+        <p>
+          De forma geral, a estrutura do formato <code>PE</code> é a seguinte:
+        </p>
+        
+        
+        <div class="post-image-wrap">
+          <img src="../img/img1.png" alt="Estrutura geral do formato PE" width="800" height="auto">
+          <p class="post-image-caption">Figura 1: Estrutura geral simplificada do Formato PE.</p>
+        </div>
+
+        <p>
+          O <code>DOS MZ Header</code> é, falando de forma bem simplificada, feito para fins de compatibilidade com o sistema antigo MS-DOS. Após eles, temos de fato as estruturas atualmente usadas pelo sistema, começando pelo cabeçalho do arquivo ou <code>PE Header</code>, seguido do cabeçalho ou tabela de seções e então as seções propriamente ditas. Pode-se pensar que tudo que se tratar de um cabeçalho possui um conteúdo descritivo, com o cabeçalho do arquivo possuindo especificações e definição de características a respeito do arquivo como um todo, já o cabeçalho de seções definindo características para cada seção em particular. Gosto de associar o formato <code>PE</code> com o formato de um livro, em que o cabeçalho <code>PE</code> incluiria todas as informações do livro como um todo incluindo sua capa, contracapa, data de publicação, número de páginas, autor, editora, etc, enquanto que o cabeçalho de seções seria o sumário do livro, no qual são definidos todos os capítulos presentes no livro e informações sobre eles como o seu nome, numeração, página de início e de fim, subcapítulos, e etc; e por fim teriamos as seções propriamente ditas, que nada mais seriam do que o próprio conteúdo dos capítulos. 
+        </p>
+
+        <h2 class="post-section">Cabeçalho MS-DOS</h2>
+        <p>
+          Estruturalmente, todos os cabeçalhos são do tipo <code>struct</code>, em que cada item dentro dele corresponde a um campo que será delimitado por sua posição na estrutura e seu tamanho. E, entre os principais campos do cabeçalho MS-DOS, temos: 
+        </p>
+        <ul>
+          <li><strong><code>e_magic</code></strong> - primeiro campo com um tamanho de 16 bits, ou seja 2 bytes. Portanto concluimos que o campo <code>e_magic</code> são os exatos primeiros dois bytes do cabeçalho, que por ser a primeira estrutura do <code>PE</code> também faz com que <code>e_magic</code> seja os dois primeiros bytes do arquivo todo. E de fato, <code>e_magic</code> representa o que chamamos de número mágico, que varia para cada tipo de arquivo e que, no caso do arquivo <code>PE</code>, são sempre os bytes <code>0x4D</code> e <code>0x5A</code>, que em ASCII são os caracteres "MZ".</li>
+          <li><strong><code>e_lfanew</code></strong> - campo que indica a posição em que o cabeçalho <code>PE</code> começa. <code>e_lfanew</code> é o último campo da estrutura do DOS Header, localizado no offset <code>0x3C</code>, e tem tamanho de 32 bits, ou seja 4 bytes.</li>
+        </ul>
+
+        <p>
+          Abaixo está um print de um arquivo <code>PE</code> dentro do editor hexadecimal <code>wxHexEditor</code>, no qual é possível ver os dois primeiros bytes com os valores <code>4D</code> e <code>5A</code>, que correspondem ao campo <code>e_magic</code>. Já no offset <code>3C</code> (linha 30 e coluna 0C) podemos ver no campo <code>e_lfanew</code> o os bytes <code>80 00 00 00</code>, que considerando o padrão little endian em que os valores na memória são lidos de trás para frente, corresponde ao valor <code>0x80</code>, e que se formos olhar de fato corresponde ao offset do cabeçalho <code>PE</code>, pois o mesmo tem a característica de sempre iniciar com os caracteres "PE" (bytes <code>0x50</code> e <code>0x45</code>).
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img2.png" alt="DOS Header no wxHexEditor" width="800" height="auto">
+          <p class="post-image-caption">Figura 2: Identificação do e_magic e e_lfanew no editor hexadecimal.</p>
+        </div>
+
+        <h2 class="post-section">Cabeçalho PE - COFF Header</h2>
+        <p>
+          Pulando para a estrutura do cabeçalho <code>PE</code>, teremos o campo da assinatura <code>PE</code> que tem 4 bytes e sempre o valor <code>0x00005045</code> (que como já dito equivale a palavra "PE"). Após ele, temos uma subestrutura conhecida como cabeçalho <code>COFF</code>, que segue a seguinte estrutura:
+        </p>
+
+<pre class="post-code">typedef struct _IMAGE_FILE_HEADER {
+  WORD  Machine;
+  WORD  NumberOfSections;
+  DWORD TimeDateStamp;
+  DWORD PointerToSymbolTable;
+  DWORD NumberOfSymbols;
+  WORD  SizeOfOptionalHeader;
+  WORD  Characteristics;
+} IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;</pre>
+
+        <p>E, entre seus campos, os que destacam são:</p>
+        <ul>
+          <li><strong><code>Machine</code></strong> - campo de 2 bytes em que o valor especifica o tipo do processador da máquina na qual o arquivo será executado, como AMD64 (<code>0x8664</code>) ou ARM64 (<code>0xaa64</code>)</li>
+          <li><strong><code>NumberOfSections</code></strong> - campo de 2 bytes que define o número de seções que o arquivo possui</li>
+          <li><strong><code>SizeOfOptionalHeader</code></strong> - campo de 2 bytes que contém o tamanho da subsestrutura seguinte, chamada de cabeçalho opcional, que está presente em todo arquivo executável</li>
+          <li><strong><code>Characteristics</code></strong> - campo de 2 bytes, em que cada bit representa uma característica daquele <code>PE</code>, por exemplo de ele é ou não de x32 bits. Funciona como uma variável de flags, onde o valor do bit pode ser 1 para caso aquela característica esteja presente, ou 0 caso não esteja.</li>
+        </ul>
+
+        <p>
+          Abaixo está um exemplo da sua estrutura no <code>wxHexEditor</code>. No total, o cabeçalho <code>COFF</code> tem um tamanho de 20 bytes, de forma que nesse exemplo o campo <code>Machine</code> tem valor <code>0x8664</code>, correspondendo a arquitetura AMD x64, o <code>NumberOfSections</code> tem valor <code>0xA</code>, mostrando que o arquivo possui 10 seções, o <code>SizeOfOptionalHeader</code> tem valor <code>0xF0</code> e <code>Characteristics</code> o valor <code>0x22</code>.
+        </p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img3.png" alt="COFF Header no wxHexEditor" width="800" height="auto">
+          <p class="post-image-caption">Figura 3: Estrutura do COFF Header destacada no editor hexadecimal.</p>
+        </div>
+
+        <h2 class="post-section">Cabeçalho PE - Optional Header</h2>
+        <p>
+          Depois disso, temos a subestrutura do cabeçalho <code>PE</code> chamada cabeçalho opcional (<code>Optional Header</code>), que apesar do nome, é obrigatório em todos os arquivos executáveis e possui uma extensa quantidade de campos:
+        </p>
+
+<pre class="post-code">typedef struct _IMAGE_OPTIONAL_HEADER64 {
+  WORD                 Magic;
+  BYTE                 MajorLinkerVersion;
+  BYTE                 MinorLinkerVersion;
+  DWORD                SizeOfCode;
+  DWORD                SizeOfInitializedData;
+  DWORD                SizeOfUninitializedData;
+  DWORD                AddressOfEntryPoint;
+  DWORD                BaseOfCode;
+  ULONGLONG            ImageBase;
+  DWORD                SectionAlignment;
+  DWORD                FileAlignment;
+  WORD                 MajorOperatingSystemVersion;
+  WORD                 MinorOperatingSystemVersion;
+  WORD                 MajorImageVersion;
+  WORD                 MinorImageVersion;
+  WORD                 MajorSubsystemVersion;
+  WORD                 MinorSubsystemVersion;
+  DWORD                Win32VersionValue;
+  DWORD                SizeOfImage;
+  DWORD                SizeOfHeaders;
+  DWORD                CheckSum;
+  WORD                 Subsystem;
+  WORD                 DllCharacteristics;
+  ULONGLONG            SizeOfStackReserve;
+  ULONGLONG            SizeOfStackCommit;
+  ULONGLONG            SizeOfHeapReserve;
+  ULONGLONG            SizeOfHeapCommit;
+  DWORD                LoaderFlags;
+  DWORD                NumberOfRvaAndSizes;
+  IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
+} IMAGE_OPTIONAL_HEADER64, *PIMAGE_OPTIONAL_HEADER64;</pre>
+
+        <p>E, entre todos esses campos, os que se destacam são:</p>
+        <ul>
+          <li><strong><code>Magic</code></strong> - campo de 2 bytes que define um segundo número mágico, que dessa vez específica se é um arquivo de 32 (<code>0x10b</code>) ou de 64 bits (<code>0x20b</code>).</li>
+          <li><strong><code>AddressOfEntryPoint</code></strong> - campo de 4 bytes no qual está o endereço virtual de entrypoint do programa, que como o nome dá a entender é o ponto de partida em que ele incia sua execução. Geralmente o entrypoint aponta para o começo da seção <code>.text</code>, onde está localizado o código executável do arquivo.</li>
+          <li><strong><code>ImageBase</code></strong> - campo de 8 bytes (ou 4, para sistemas de 32 bits), onde está o endereço base da memória virtual em que o arquivo será carregado no momento da sua execução. Seu nome se refere justamente ao termo "arquivo-imagem" que usamos para o arquivo quando o mesmo é carregado na memória.</li>
+          <li><strong><code>SectionAlignment</code></strong> - campo de 4 bytes que irá definir o alinhamento das seções que ocorre no momento de carregamento. Mais especificamente, o arquivo quando carregado passa pelo processo de mapeamento, em que será dividido em segmentos chamados de páginas e será garantido que cada seção fique em uma página específica. Isso é feito principalmente para facilitar o estabelecimento de permissões das seções, de forma que seja possível definir um tipo específico de permissão para uma página inteira e assim a memória não precisa verificar as permissões de cada byte por vez. Dessa forma, se o valor de <code>SectionAlignment</code> for de <code>0x2000</code>, todas as páginas têm um tamanho de <code>0x2000</code> bytes e devem conter uma seção (ou parte dela, caso o tamanho da seção seja maior que o tamanho da página; nesse caso, a continuação da seção deve estar na página seguinte contendo as mesmas permissões).</li>
+          <li><strong><code>SizeOfImage</code></strong> - campo de 4 bytes que possui o tamanho do arquivo-imagem, ou seja, o tamanho do arquivo quando o mesmo é mapeado para a memória.</li>
+          <li><strong><code>FileAlignment</code></strong> - campo de 4 bytes que define o tamanho dos blocos de dados no disco, de forma que toda seção deve obrigatoriamente começar em um offset que seja múltiplo desse valor para garantir que cada uma esteja dentro de um bloco separado. Dessa forma, mesmo que a seção seja muito menor que o tamanho de alinhamento e seja possível encaixar mais uma seção neste mesmo bloco, o compilador do programa garante que isso não ocorra e preenche todo o espaço restante com bytes nulos (<code>0x00</code>). Por mais que pareça contraditório, esse processo na verdade resulta em uma leitura mais rápida, pois os discos não realizam a leitura byte a byte mas sim em blocos, de forma que esse alinhamento facilita seu trabalho de busca e acesso.</li>
+          <li><strong><code>DllCharacteristics</code></strong> - campo de 2 bytes, que assim como o campo <code>Characteristics</code> funciona como uma variável de flags, definindo a presença de características como o <code>ASLR</code>, um mecanismo que faz com que o endereço base do programa seja alterada a cada carregamento.</li>
+          <li><strong><code>NumberOfRvaAndSizes</code></strong> - campo de 4 bytes que especifica a quantidade de diretórios de dados (especificados mais abaixo) que aquele arquivo possui, e que irão ocupar o restante do cabeçalho opcional.</li>
+        </ul>
+
+        <p>
+          <strong>Obs:</strong> Inicialmente, pode ser confuso diferenciar os campos <code>SectionAlignment</code> e <code>FileAlignment</code>, considerando que ambos envolvem um processo de alinhamento no qual garantem que cada seção esteja presente em um segmento específico. A diferença principal é que o <code>FileAlignment</code> é estabelecido no arquivo em disco, já que os blocos em que as seções são divididas correspondem ao tamanho dos blocos que serão lidos pelo disco (tanto um HD quanto um SSD). Já no caso do <code>SectionAlignment</code>, o alinhamento é feito no momento em que o arquivo é carregado e mapeado na memória, e seu tamanho corresponde precisamente ao tamanho das páginas estabelecido para a arquitetura do sistema (nos sistemas x64 por exemplo, esse valor é de 4096 bytes ou <code>0x1000</code> em hexadecimal). Em ambos os casos, quando o conteúdo de uma página ou um bloco é menor que o alinhamento, os bytes restantes são preenchidos com valores nulos (<code>0x00</code>).
+        </p>
+
+        <p>Abaixo está um exemplo da estrutura da cabeçalho opcional como um todo e também com os campos que foram detalhados anteriormente sublinhados logo na imagem seguinte:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img4.png" alt="Optional Header sublinhado no wxHexEditor" width="800" height="auto">
+          <p class="post-image-caption">Figura 4: Campos do Optional Header destacados.</p>
+        </div>
+
+        <p>Como é possível ver no exemplo acima, cada campo que foi explicado está grifado em amarelo. E para termos uma referência melhor desses valores, podemos ver como essas mesmas informações são mostradas de maneira organizada no <code>CFF Explorer</code>:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img5.png" alt="Optional Header no CFF Explorer" width="800" height="auto">
+          <p class="post-image-caption">Figura 5: Visão organizada dos campos no CFF Explorer.</p>
+        </div>
+
+        <h2 class="post-section">Cabeçalho PE - Data directories</h2>
+        <p>
+          Depois disso, temos uma quantidade de diretórios de dados definida pelo campo <code>NumberOfRvaAndSizes</code>, com cada diretório apontando para uma tabela específica que será carregada no momento da execução. Exemplos dessas tabelas são a de exportação, que contém os nomes de todas as <code>APIs</code> que são exportadas pelo programa, a de importação, com os nomes das <code>APIs</code> importadas, e a <code>IAT (Import Address Table)</code> que contém ponteiros para os endereços reais das importações do programa.
+        </p>
+
+        <p>Abaixo está a estrutura de um diretório de dados:</p>
+
+<pre class="post-code">typedef struct _IMAGE_DATA_DIRECTORY {
+  DWORD VirtualAddress;
+  DWORD Size;
+} IMAGE_DATA_DIRECTORY, *PIMAGE_DATA_DIRECTORY;</pre>
+
+        <h2 class="post-section">Cabeçalhos de seção</h2>
+        <p>
+          Após os diretórios, temos os últimos cabeçalhos que correspondem aos cabeçalhos das seções do arquivo, cada um com o tamanho de 40 bytes. Nelas, estão todas as características referentes a seção que ele representa. Sua estrutura é a seguinte:
+        </p>
+
+<pre class="post-code">typedef struct _IMAGE_SECTION_HEADER {
+  BYTE  Name[IMAGE_SIZEOF_SHORT_NAME];
+  union {
+    DWORD PhysicalAddress;
+    DWORD VirtualSize;
+  } Misc;
+  DWORD VirtualAddress;
+  DWORD SizeOfRawData;
+  DWORD PointerToRawData;
+  DWORD PointerToRelocations;
+  DWORD PointerToLinenumbers;
+  WORD  NumberOfRelocations;
+  WORD  NumberOfLinenumbers;
+  DWORD Characteristics;
+} IMAGE_SECTION_HEADER, *PIMAGE_SECTION_HEADER;</pre>
+
+        <p>E os seus campos principais incluem:</p>
+        <ul>
+          <li><strong><code>Name</code></strong> - campo de 8 bytes, em que os bytes representam caracteres que juntos podem formar um nome de no máximo 7 letras para a seção (pois o último byte deve ser sempre nulo para que a string seja propriamente finalizada). Comumente seções têm nomes específicos de acordo com seu conteúdo, como a seção <code>.text</code> que contém o código executável do arquivo, a seção <code>.data</code> que contém as constantes e variáveis globais que já foram inicializadas, e a seção <code>.rsrc</code> que é um diminutivo para Resources e contém os recursos do programa como seu ícone, efeitos sonoros, imagens e etc.</li>
+          <li><strong><code>VirtualSize</code></strong> - campo de 4 bytes que corresponde ao tamanho que o programa terá no momento em que for carregado e mapeado na memória virtual para iniciar sua execução.</li>
+          <li><strong><code>VirtualAddress</code></strong> - campo de 4 bytes que corresponde ao endereço na memória virtual em que a seção começa. Nesse caso, ele é relativo ao valor da imagem do programa (seu <code>ImageBase</code>), ou seja, ao endereço em que o programa será carregado na memória. Sendo assim, se o <code>ImageBase</code> do programa é <code>0x20000</code> e o <code>VirtualAddress</code> da seção é <code>0x3000</code>, a seção começa de fato no endereço <code>0x20000</code> (IB) + <code>0x3000</code> (VA), ou seja em <code>0x23000</code>.</li>
+          <li><strong><code>SizeOfRawData</code></strong> - campo de 4 bytes que representa o tamanho que a seção tem estaticamente no disco, que pode ser menor que o seu tamanho virtual considerando que certas informações só serão carregadas em tempo de execução e que o arquivo passará pelo processo de mapeamento no qual as seções serão realocadas para ficarem cada uma em uma página.</li>
+          <li><strong><code>PointerToRawData</code></strong> - campo de 4 bytes que aponta para o endereço exato que a seção começa no disco. É possível observar que sempre que usamos o termo "Raw" estamos nos referindo ao estado do arquivo no disco, e não a ele carregado na memória (que é quando o arquivo passa a ser chamado de arquivo-imagem). Colocando o arquivo em um editor, podemos ver que o <code>PointerToRawData</code> das suas seções corresponde exatamente ao valor do offset de quando as seções começam, já que nesse caso o arquivo está no disco e seu endereços não são relativos ao seu <code>ImageBase</code>.</li>
+          <li><strong><code>Characteristics</code></strong> - por fim temos novamente o campo de características, com tamanho de 4 bytes em que cada bit representa uma flag referente a uma característica da seção que pode ou não existir. Entre as flags, temos as que tratam justamente da permissão da seção, em que os bits 29, 30 e 31 representam respectivamente as permissões de execução, leitura e escrita.</li>
+        </ul>
+
+        <p>Abaixo temos um exemplo dos cabeçalhos de seção de um arquivo, cada um grifado com uma cor diferente:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img6.png" alt="Cabeçalhos de seção grifados por cores" width="800" height="auto">
+          <p class="post-image-caption">Figura 6: Diferentes cabeçalhos de seção visualizados no editor hexadecimal.</p>
+        </div>
+
+        <p>Abaixo está um exemplo de um cabeçalho da seção <code>.text</code> com os campos explicados de forma detalhada em destaque:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img7.png" alt="Cabeçalho da seção .text destacado" width="800" height="auto">
+          <p class="post-image-caption">Figura 7: Campos da seção .text em evidência.</p>
+        </div>
+
+        <p>E, para visualizarmos esses campos de forma mais direta e organizada, podemos novamente usar o <code>CFF Explorer</code> para procurar pelos cabeçalhos de seção:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img8.png" alt="Section Headers no CFF Explorer" width="800" height="auto">
+          <p class="post-image-caption">Figura 8: Section Headers tab no CFF Explorer.</p>
+        </div>
+
+        <h2 class="post-section">Seções</h2>
+        <p>
+          Após isso, temos as últimas estruturas do arquivo <code>PE</code> que são justamente as suas seções. Como já conseguimos entender, seções são uma forma de organizar o conteúdo do binário, considerando que determinados dados devem ter permissões diferentes de outros. A seção <code>.text</code> por exemplo, por se tratar do código do programa, deve ter tanto permissão de execução quanto de escrita e leitura, já que todas essas ações são necessárias. Já no caso da <code>.data</code>, ela terá permissão apenas de leitura e escrita, já que se trata de variáveis inicializadas e não contém nenhum código para ser executado. Também existe uma seção <code>.rdata</code> que semelhante a <code>.data</code> possui dados inicializados, porém que tem apenas permissão de leitura de forma que nada dentro dela possa ser modificado. Por isso mesmo que cada seção precisa ficar em uma página, pois é justamente de página em página que as permissões serão definidas.
+        </p>
+        <p>
+          No disco por sua vez, cada seção deve ficar em um bloco de tamanho definido no campo <code>FileAlignment</code>, e vai começar no offset com o mesmo valor do campo <code>PointerToRawData</code> além de ter o tamanho especificado em <code>SizeOfRawData</code>. Já quando o arquivo for mapeado no disco, o tamanho das seções será o <code>VirtualSize</code> e todos os endereços se tornam endereços virtuais, de forma que estarão sempre relativos ao <code>ImageBase</code> e assim o início da seção ficará na posição do seu <code>VirtualAddress</code> + o <code>ImageBase</code> do arquivo.
+        </p>
+
+        <p>Abaixo está um fluxograma bem mais detalhado e com exemplos dessas estruturas:</p>
+
+        <div class="post-image-wrap">
+          <img src="../img/img9.png" alt="Fluxograma da estrutura PE" width="800" height="auto">
+          <p class="post-image-caption">Figura 9: Fluxograma detalhado da estrutura PE (Fonte: Corkami).</p>
+        </div>
+
+        <p>
+          Fonte: <a href="https://github.com/corkami/pics/blob/master/binary/PE.png" target="_blank">https://github.com/corkami/pics/blob/master/binary/PE.png</a>
+        </p>
+
+        <br>
+        <hr>
+        <br>
+
+       
+      </div>
+    </main>
+  </div>
+</body>
+</html>
