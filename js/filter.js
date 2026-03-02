@@ -1,7 +1,9 @@
 const data = [
 
   { title: "Aprendendo buffer overflow baseado em Stack", tag: "vulnerabilidades", url: "pages/post5.html" },
-  { title: "Como fazer um unpacking manual -  resolução do crackme 'unpackme1.exe'", tag: "crackme", url: "pages/post6.html" }
+  { title: "Como fazer um unpacking manual -  resolução do crackme 'unpackme1.exe'", tag: "crackme", url: "pages/post6.html" },
+    { title: "Entendendo a estrutura de um executável - Formato PE parte 1", tag: "tutorial", url: "pages/post1.html" },
+    { title: "Aprendendo a inserir manualmente uma seção de desempacotamento - Formato PE parte 2", tag: "tutorial", url: "pages/post2.html" }
 
 ];
 
