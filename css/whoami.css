@@ -14,15 +14,18 @@ pre {
   text-align: justify;
     color: #cbcaca;
     font-family: monospace;
- width: 100%;
+
 
 }
-
+.whomai-container pre {
+   width: 100%;
+  }
 .whoami-container {
   display: flex;
   align-items: center;
   gap: 25px;
   margin-top: 20px;
+  
 }
 
 .whoami-photo {
