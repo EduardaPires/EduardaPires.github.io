@@ -22,15 +22,17 @@ pre {
   margin: 30px 60px 20px 60px;
   }
 .whoami-container {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    margin-top: 20px;
+     width: 100%;
+  
 }
 
 .whoami-photo {
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   object-fit: cover;
   object-position: center;
   border-radius: 50%;
