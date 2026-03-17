@@ -13,5 +13,7 @@
 			"path": "../blog/pages"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "EduardaPires.github.io"
+	}
 }
