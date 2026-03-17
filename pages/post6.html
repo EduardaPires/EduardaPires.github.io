@@ -40,7 +40,7 @@
 <p>Meu primeiro passo foi usar a ferramenta de análise de arquivos chamada Detect It Easy (DIE) para analisar o arquivo e entender melhor sua natureza.</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image1.png" alt="Imagem" width="800">
+  <img src="../img/post6/image1.png" alt="Imagem" width="800">
   
 </div>
 
@@ -58,7 +58,7 @@ No caso do UPX (Ultimate Packer for eXecutables) em específico, o mesmo trata-s
 <p>Comecei então verificando seu mapa de memória, no qual encontrei suas seções:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image2.png" alt="Imagem" width="800">
+  <img src="../img/post6/image2.png" alt="Imagem" width="800">
   
 </div>
 
@@ -67,7 +67,7 @@ No caso do UPX (Ultimate Packer for eXecutables) em específico, o mesmo trata-s
 <p>Quando vamos na janela de Símbolos, identificamos o AdressOfEntrPoint - ou seja, o endereço da primeira instrução do programa - com o valor <code>0x00409D10</code>.</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image3.png" alt="Imagem" width="800">
+  <img src="../img/post6/image3.png" alt="Imagem" width="800">
   
 </div>
 
@@ -75,7 +75,7 @@ No caso do UPX (Ultimate Packer for eXecutables) em específico, o mesmo trata-s
 Além disso, analisando o conteúdo no despejo de memória de cada seção podemos perceber que a seção "mbin0" se encontra vazia, diferentemente da "mbin1" e ".rsrc".</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image4.png" alt="Imagem" width="800">
+  <img src="../img/post6/image4.png" alt="Imagem" width="800">
   
 </div>
 
@@ -84,7 +84,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 <p>Iniciando a depuração do arquivo, que como esperado começa na seção "mbin1", podemos observar uma interação com os registradores <code>ESI</code> e <code>EDI</code>, que costumam ser usados como ponteiros ou índices (em que <code>ESI</code> aponta para o endereço de origem e <code>EDI</code> para o endereço de destino).</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image5.png" alt="Imagem" width="800">
+  <img src="../img/post6/image5.png" alt="Imagem" width="800">
   
 </div>
 
@@ -93,7 +93,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 <p>Depois, temos um jump para uma série de instruções:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image6.png" alt="Imagem" width="800">
+  <img src="../img/post6/image6.png" alt="Imagem" width="800">
   
 </div>
 
@@ -104,7 +104,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 <p>A fim de ver o conteúdo final de "mbin0", coloquei um breakpoint em um ponto do código em que as iterações de descompressão já tenham terminado. Dessa forma, foi possível ver no despejo de memória a estrutura original do executável, com suas devidas seções e conteúdo.</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image7.png" alt="Imagem" width="800">
+  <img src="../img/post6/image7.png" alt="Imagem" width="800">
   
 </div>
 
@@ -113,7 +113,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 <p>Ainda dentro do algoritmo de descompressão de "mbin1", são feitas várias chamadas para bibliotecas que, quando vamos verificar no despejo de memória, estão sendo referenciadas na seção .rsrc:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image8.png" alt="Imagem" width="800">
+  <img src="../img/post6/image8.png" alt="Imagem" width="800">
   
 </div>
 
@@ -122,7 +122,7 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 <p>Para comprovar isso também podemos analisar alguns valores no cabeçalho opcional do arquivo comprimido, como o endereço e tamanho virtual do diretório de importações. Para facilitar a visualização e o processo, usei a ferramenta de análise e edição de arquivos PE "CFF Explorer":</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image9.png" alt="Imagem" width="800">
+  <img src="../img/post6/image9.png" alt="Imagem" width="800">
   
 </div>
 
@@ -143,14 +143,14 @@ Além disso, analisando o conteúdo no despejo de memória de cada seção podem
 <p>Agora, podemos começar clicando em IAT AutoSearch para obter o endereço virtual e o tamanho da IAT:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image10.png" alt="Imagem" width="800">
+  <img src="../img/post6/image10.png" alt="Imagem" width="800">
   
 </div>
 
 <p> Depois disso, vamos em "Get Imports" para ver os imports necessários para nosso arquivo funcionar, e seremos apresentados com essa lista:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image11.png" alt="Imagem" width="800">
+  <img src="../img/post6/image11.png" alt="Imagem" width="800">
   
 </div>
 
@@ -164,14 +164,14 @@ Ou seja, os endereços reais das APIs não serão definidos até que o algoritmo
 <p>Acompanhando a execução no debugger, foi possível observar exatamente o momento em que esses endereços começam a ser inseridos na IAT, preenchendo a tabela dinamicamente com os ponteiros as funções importadas:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image12.png" alt="Imagem" width="800">
+  <img src="../img/post6/image12.png" alt="Imagem" width="800">
   
 </div>
 
 <p>Depois que todas a chamadas são feitas e a IAT está completa, é possível ver uma série de instruções envolvendo a API "<code>MessageBoxA</code>":</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image13.png" alt="Imagem" width="800">
+  <img src="../img/post6/image13.png" alt="Imagem" width="800">
   
 </div>
 
@@ -180,7 +180,7 @@ Ou seja, os endereços reais das APIs não serão definidos até que o algoritmo
 <p>Depois disso, o endereço da API "MessageBox" é passado para o endereço <code>0x409EE1</code>, complementando a instrução no byte anterior e resultando em <code>push [MessageBoxA]</code>. E então, logo após essa instrução é adicionado 0xC3, que representa a instrução de retorno <code>RET</code>.</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image14.png" alt="Imagem" width="800">
+  <img src="../img/post6/image14.png" alt="Imagem" width="800">
   
 </div>
 
@@ -192,7 +192,7 @@ Ou seja, os endereços reais das APIs não serão definidos até que o algoritmo
 <p>Depois disso, a lista de imports será automaticamente atualizada e podemos ver que agora todos eles foram reconhecidos:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image15.png" alt="Imagem" width="800">
+  <img src="../img/post6/image15.png" alt="Imagem" width="800">
   
 </div>
 
@@ -201,7 +201,7 @@ Ou seja, os endereços reais das APIs não serão definidos até que o algoritmo
 <p>Porém, se tentarmos executar de imediato o novo arquivo, iremos nos deparar com o seguinte erro:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image16.png" alt="Imagem" width="800">
+  <img src="../img/post6/image16.png" alt="Imagem" width="800">
   
 </div>
 
@@ -210,7 +210,7 @@ Ou seja, os endereços reais das APIs não serão definidos até que o algoritmo
 <p>Agora, clicando no novo executável, podemos ver a mesma tela que aparece quando executamos sua versão compactada, confirmando que ele está funcionando normalmente:</p>
 
 <div class="post-image-wrap">
-  <img src="../img/image17.png" alt="Imagem" width="800">
+  <img src="../img/post6/image17.png" alt="Imagem" width="800">
   
 </div>
 

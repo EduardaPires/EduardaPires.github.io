@@ -47,7 +47,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img11.png" alt="Nomes de seções na aba ASCII do editor hexadecimal" width="800" height="auto">
+          <img src="../img/post1e2/img11.png" alt="Nomes de seções na aba ASCII do editor hexadecimal" width="800" height="auto">
           <p class="post-image-caption">Início dos cabeçalhos visualizados pelo nome na aba ASCII.</p><br>
         </div>
 
@@ -56,7 +56,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img12.png" alt="PointerToRawData no CFF Explorer" width="800" height="auto">
+          <img src="../img/post1e2/img12.png" alt="PointerToRawData no CFF Explorer" width="800" height="auto">
           <p class="post-image-caption">Campo PointerToRawData da seção .text.</p><br>
         </div>
 
@@ -69,7 +69,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img13.png" alt="Espaço disponível em null bytes no editor" width="800" height="auto">
+          <img src="../img/post1e2/img13.png" alt="Espaço disponível em null bytes no editor" width="800" height="auto">
           <p class="post-image-caption">Espaço de bytes nulos disponível para criação do nosso cabeçalho.</p><br>
         </div>
 
@@ -81,7 +81,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img14.png" alt="Adição de null bytes no final do arquivo" width="800" height="auto">
+          <img src="../img/post1e2/img14.png" alt="Adição de null bytes no final do arquivo" width="800" height="auto">
           <p class="post-image-caption">Adição de bytes nulos no final do binário.</p><br>
         </div>
 
@@ -93,7 +93,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img15.png" alt="Cálculo do VirtualAddress da nova seção" width="800" height="auto">
+          <img src="../img/post1e2/img15.png" alt="Cálculo do VirtualAddress da nova seção" width="800" height="auto">
           <p class="post-image-caption">Verificando os valores da seção anterior para calcular o novo VirtualAddress.</p><br>
         </div>
 
@@ -154,7 +154,7 @@
         <p>Quanto ao restante dos campos, podemos deixar com o valor zero.</p><br>
         <p>Preenchendo devidamente a região do nosso cabeçalho de seção com essas informações, teremos a seguinte estrutura:</p><br>
         <div class="post-image-wrap">
-          <img src="../img/img16.png" alt="Informações para o novo cabeçalho" width="800" height="auto">
+          <img src="../img/post1e2/img16.png" alt="Informações para o novo cabeçalho" width="800" height="auto">
         </div>
         
 
@@ -168,14 +168,14 @@
         <p>Agora, verificando o arquivo modificado no <code>CFF Explorer</code>, vemos que a nova seção foi reconhecida com sucesso:</p><br>
         
         <div class="post-image-wrap">
-          <img src="../img/img17.png" alt="Nova seção .new no CFF Explorer" width="800" height="auto">
+          <img src="../img/post1e2/img17.png" alt="Nova seção .new no CFF Explorer" width="800" height="auto">
           <p class="post-image-caption">Seção .new reconhecida validamente.</p><br>
         </div>
 
         <p>E, para garantir que o arquivo continua funcionando normalmente, o executamos e verificamos que ele é executado da mesma forma que a sua versão original, nos mostrando a tela inicial do <code>putty.exe</code>:</p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img18.png" alt="Putty original rodando com sucesso" width="800" height="auto">
+          <img src="../img/post1e2/img18.png" alt="Putty original rodando com sucesso" width="800" height="auto">
           <p class="post-image-caption">Putty executando mesmo após as alterações na estrutura PE.</p><br>
         </div>
 
@@ -188,7 +188,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img19.png" alt="Valor atual de DllCharacteristics" width="800" height="auto">
+          <img src="../img/post1e2/img19.png" alt="Valor atual de DllCharacteristics" width="800" height="auto">
           <p class="post-image-caption">Campo DllCharacteristics indicando ASLR ativo.</p><br>
         </div>
 
@@ -201,7 +201,7 @@
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img20.png" alt="Alteração do Entry Point" width="800" height="auto">
+          <img src="../img/post1e2/img20.png" alt="Alteração do Entry Point" width="800" height="auto">
           <p class="post-image-caption">Mudando o AddressOfEntryPoint para apontar para a nova seção.</p><br>
         </div>
 
@@ -242,32 +242,32 @@ empacotamento(arquivo, raw_address, raw_size)</pre>
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img21.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
+          <img src="../img/post1e2/img21.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
           <p class="post-image-caption">Arquivos comparados no HxD demonstrando a ofuscação aplicada à seção .text.</p><br>
         </div>
         <div class="post-image-wrap">
-          <img src="../img/img22.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
+          <img src="../img/post1e2/img22.png" alt="Comparação dos binários no HxD após XOR" width="800" height="auto">
           <p class="post-image-caption">Arquivos comparados no HxD demonstrando a ofuscação aplicada à seção .text.</p><br>
         </div>
 
         <p>Também podemos ver, ao inserir os arquivos no <code>x64dbg</code> por exemplo, que na versão modificada não é mais possível identificar as strings do arquivo:</p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img23.png" alt="Falta de strings no x64dbg (versão empacotada)" width="800" height="auto">
+          <img src="../img/post1e2/img23.png" alt="Falta de strings no x64dbg (versão empacotada)" width="800" height="auto">
           <p class="post-image-caption">Strings ofuscadas no debugger (versão empacotada).</p><br>
         </div>
 
         <p>Enquanto que no arquivo original tínhamos a seguinte visualização:</p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img24.png" alt="Strings visíveis no x64dbg (versão original)" width="800" height="auto">
+          <img src="../img/post1e2/img24.png" alt="Strings visíveis no x64dbg (versão original)" width="800" height="auto">
           <p class="post-image-caption">Strings perfeitamente visíveis no arquivo original.</p><br>
         </div>
 
         <p>Agora, para criar o nosso código de decodificação da seção <code>.text</code>, precisamos do seu <code>VirtualAddress</code> e <code>VirtualSize</code>:</p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img25.png" alt="Valores de VirtualAddress e VirtualSize para uso no Assembly" width="800" height="auto">
+          <img src="../img/post1e2/img25.png" alt="Valores de VirtualAddress e VirtualSize para uso no Assembly" width="800" height="auto">
           <p class="post-image-caption">Coletando VirtualAddress e VirtualSize.</p><br>
         </div>
 
@@ -301,7 +301,7 @@ JMP 1400BE504 ;salta para o OEP (original entrypoint)</pre>
         </p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img26.png" alt="Modificando as instruções via x64dbg" width="800" height="auto">
+          <img src="../img/post1e2/img26.png" alt="Modificando as instruções via x64dbg" width="800" height="auto">
           <p class="post-image-caption">Inserindo o loop de decodificação via x64dbg.</p><br>
         </div>
 
@@ -310,7 +310,7 @@ JMP 1400BE504 ;salta para o OEP (original entrypoint)</pre>
         <p>E por fim, para confirmar se o desempacotamento está funcionando, executamos o nosso novo arquivo e sabemos que está tudo certo porque nos deparamos novamente com a tela inicial do <code>putty.exe</code>:</p><br>
 
         <div class="post-image-wrap">
-          <img src="../img/img27.png" alt="Putty funcionando novamente após o pack" width="800" height="auto">
+          <img src="../img/post1e2/img27.png" alt="Putty funcionando novamente após o pack" width="800" height="auto">
           <p class="post-image-caption">Executável modificado carregando com sucesso em runtime.</p><br>
         </div>
 
@@ -318,12 +318,12 @@ JMP 1400BE504 ;salta para o OEP (original entrypoint)</pre>
 
         <p>No <code>putty.exe</code> original: </p><br>
         <div class="post-image-wrap">
-          <img src="../img/img28.png" alt="Análise estática no arquivo original" width="800" height="auto">
+          <img src="../img/post1e2/img28.png" alt="Análise estática no arquivo original" width="800" height="auto">
         </div>
 
         <p>No nosso <code>putty.exe</code> empacotado:</p><br>
         <div class="post-image-wrap">
-          <img src="../img/img29.png" alt="Análise estática no arquivo empacotado" width="800" height="auto">
+          <img src="../img/post1e2/img29.png" alt="Análise estática no arquivo empacotado" width="800" height="auto">
         </div>
 
         <p>
