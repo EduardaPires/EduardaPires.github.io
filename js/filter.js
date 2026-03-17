@@ -16,10 +16,10 @@ function render() {
 
   if (postsTitleEl) {
     if (active.length === 0) {
-      postsTitleEl.textContent = "$ ls posts";
+      postsTitleEl.textContent = "$ ls /posts";
     } else {
       const grepArg = active.join("|");
-      postsTitleEl.textContent = '$ ls posts | grep "' + grepArg + '"';
+      postsTitleEl.textContent = '$ ls /posts | grep "' + grepArg + '"';
     }
   }
 
